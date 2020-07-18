@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+
+pub mod tests;
+
 pub mod model {
     use super::common::*;
 
@@ -28,10 +31,10 @@ pub mod model {
     }
 
     fn parse_part(input: &str) -> Result<TodoElement, ParsingError> {
-        let parsers = vec![
+        let parsers = [
             try_parse_project, 
             try_parse_context, 
-            try_parse_text
+            try_parse_text,
         ];
         let mut iterator = parsers.iter();
         let mut last_error: Option<Result<TodoElement, ParsingError>> = Option::None;
