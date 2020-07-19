@@ -5,27 +5,28 @@ pub mod tests;
 use common::*;
 
 #[derive(Debug)]
-#[derive(PartialEq)]
 pub enum TodoElement {
     Project(String),
     Context(String),
     Text(String),
 }
 
+pub fn create_prefix_parser(prefix:char, element_constructor: &'static dyn Fn(String)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
+    Box::new(move |input: &str| {
+        if let Some(data) = input.strip_prefix(prefix) {
+            Result::Ok(element_constructor(String::from(data)))
+        } else {
+            Result::Err(ParsingError{message:"error parsing entity"})
+        }
+    })
+}
+
 pub fn try_parse_project(input:&str) -> Result<TodoElement, ParsingError> {
-    if let Some(project_name) = input.strip_prefix('+') {
-        Result::Ok(TodoElement::Project(String::from(project_name)))
-    } else {
-        Result::Err(ParsingError{message:"error parsing project"})
-    }
+    create_prefix_parser('+', &TodoElement::Project)(input)
 }
 
 fn try_parse_context(input:&str) -> Result<TodoElement, ParsingError> {
-    if let Some(context_name) = input.strip_prefix('@') {
-        Result::Ok(TodoElement::Context(String::from(context_name)))
-    } else {
-        Result::Err(ParsingError{message:"error parsing context"})
-    }
+    create_prefix_parser('@', &TodoElement::Context)(input)
 }
 
 fn try_parse_text(input:&str) -> Result<TodoElement, ParsingError> {
