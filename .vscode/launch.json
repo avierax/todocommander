@@ -31,7 +31,10 @@
                     "test",
                     "--no-run",
                     "--bin=todocommander",
-                    "--package=todocommander"
+                    "--package=todocommander",
+                    "--",
+                    "--nocapture",
+
                 ],
                 "filter": {
                     "name": "todocommander",
