@@ -25,6 +25,19 @@ pub fn parse_text(){
 }
 
 #[test]
+pub fn parse_due(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("due:2020-07-22");
+    assert!(matches!(got, Result::Ok(super::TodoElement::Due(DateData{year: y, month: m, day: d})) if y == 2020 && m == 7 && d == 22));
+}
+
+#[test]
+pub fn parse_due_falls_back_to_text_on_incorrect_format(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("due:2020-x-22");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Text(t)) if t == "due:2020-x-22"));
+}
+
+#[test]
 pub fn parse_entry(){
     match TodoEntry::parse("+Project1 @Site1 Foo bar") {
         Result::Ok(TodoEntry{parts: todo_elements}) => {
@@ -35,7 +48,7 @@ pub fn parse_entry(){
                 TodoElement::text("bar"),
             ) {
                 if ! todo_elements.contains(&entry){
-                    panic!("")
+                    panic!(" entry {:?} not found")
                 }
             }
         },

@@ -34,10 +34,10 @@ impl TodoElement {
         TodoElement::Text(String::from(str))
     }
 
-    fn create_prefix_parser(prefix:char, element_constructor: &'static dyn Fn(String)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
+    fn create_prefix_parser(prefix:char, element_constructor: &'static dyn Fn(&str)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
         Box::new(move |input: &str| {
             if let Some(data) = input.strip_prefix(prefix) {
-                Result::Ok(element_constructor(String::from(data)))
+                Result::Ok(element_constructor(data))
             } else {
                 Result::Err(ParsingError{message:"error parsing entity"})
             }
@@ -45,21 +45,44 @@ impl TodoElement {
     }
     
     pub fn try_parse_project(input:&str) -> Result<TodoElement, ParsingError> {
-        TodoElement::create_prefix_parser('+', &TodoElement::Project)(input)
+        TodoElement::create_prefix_parser('+', &TodoElement::project)(input)
     }
     
     fn try_parse_context(input:&str) -> Result<TodoElement, ParsingError> {
-        TodoElement::create_prefix_parser('@', &TodoElement::Context)(input)
+        TodoElement::create_prefix_parser('@', &TodoElement::context)(input)
     }
     
     fn try_parse_text(input:&str) -> Result<TodoElement, ParsingError> {
-        Result::Ok(TodoElement::Text(String::from(input)))
+        Result::Ok(TodoElement::text(input))
+    }
+
+    fn try_parse_due(input: &str) -> Result<TodoElement, ParsingError> {
+        if let Some(str_date) = input.strip_prefix("due:") {
+            let x:Vec<&str> = str_date.split('-').collect();
+            match (x.get(0),x.get(1),x.get(2)) {
+                (Some(year_str), Some(month_str), Some(day_str)) => {
+                    Result::Ok(
+                        TodoElement::Due(
+                            DateData{
+                                year: year_str.parse::<u16>().map_err(|_|{ParsingError{message:"error parsing year"}})?,
+                                month: month_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing month"}})?,
+                                day: day_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing day"}})?
+                            }
+                        )
+                    )
+                },
+                _ => Result::Err(ParsingError{message:"error parsing date"})
+            }
+        } else {
+            Result::Err(ParsingError{message:"error parsing entity"})
+        }
     }
     
     pub fn parse(input: &str) -> Result<TodoElement, ParsingError> {
         let parsers = [
             TodoElement::try_parse_project, 
             TodoElement::try_parse_context, 
+            TodoElement::try_parse_due,
             TodoElement::try_parse_text,
         ];
         let mut iterator = parsers.iter();
