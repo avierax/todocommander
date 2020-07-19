@@ -24,6 +24,18 @@ pub fn parse_text(){
     assert!(matches!(got, Result::Ok(super::TodoElement::Text(project_name)) if project_name == "Site1"));
 }
 
+#[test]
 pub fn parse_entry(){
-
+    match TodoEntry::parse("+Project1 @Site1 Foo bar") {
+        Result::Ok(TodoEntry{parts: todo_entry}) => {
+            if  !todo_entry.contains(&TodoElement::Project(String::from("Project1"))) 
+            ||  !todo_entry.contains(&TodoElement::Context(String::from("Site1"))) 
+            ||  !todo_entry.contains(&TodoElement::Text(String::from("Foo"))) 
+            ||  !todo_entry.contains(&TodoElement::Text(String::from("bar"))) 
+            {
+                panic!("")
+            }
+        },
+        _ => panic!("error while parsing entry")
+    }
 }

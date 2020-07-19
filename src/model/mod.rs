@@ -5,6 +5,7 @@ pub mod tests;
 use common::*;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum TodoElement {
     Project(String),
     Context(String),
