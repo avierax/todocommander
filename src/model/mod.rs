@@ -8,6 +8,7 @@ use common::*;
 #[derive(PartialEq)]
 pub enum TodoElement {
     Project(String),
+    Context(String),
     Text(String),
 }
 
@@ -20,8 +21,8 @@ pub fn try_parse_project(input:&str) -> Result<TodoElement, ParsingError> {
 }
 
 fn try_parse_context(input:&str) -> Result<TodoElement, ParsingError> {
-    if let Some(project_name) = input.strip_prefix('@') {
-        Result::Ok(TodoElement::Project(String::from(project_name)))
+    if let Some(context_name) = input.strip_prefix('@') {
+        Result::Ok(TodoElement::Context(String::from(context_name)))
     } else {
         Result::Err(ParsingError{message:"error parsing context"})
     }
