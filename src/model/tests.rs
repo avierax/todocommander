@@ -27,13 +27,16 @@ pub fn parse_text(){
 #[test]
 pub fn parse_entry(){
     match TodoEntry::parse("+Project1 @Site1 Foo bar") {
-        Result::Ok(TodoEntry{parts: todo_entry}) => {
-            if  !todo_entry.contains(&TodoElement::Project(String::from("Project1"))) 
-            ||  !todo_entry.contains(&TodoElement::Context(String::from("Site1"))) 
-            ||  !todo_entry.contains(&TodoElement::Text(String::from("Foo"))) 
-            ||  !todo_entry.contains(&TodoElement::Text(String::from("bar"))) 
-            {
-                panic!("")
+        Result::Ok(TodoEntry{parts: todo_elements}) => {
+            for entry in vec!(
+                TodoElement::project("Project1"), 
+                TodoElement::context("Site1"),
+                TodoElement::text("Foo"),
+                TodoElement::text("bar"),
+            ) {
+                if ! todo_elements.contains(&entry){
+                    panic!("")
+                }
             }
         },
         _ => panic!("error while parsing entry")

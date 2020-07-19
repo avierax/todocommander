@@ -6,13 +6,33 @@ use common::*;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub struct DateData{
+    year:u16,
+    month:u8,
+    day:u8,
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum TodoElement {
     Project(String),
     Context(String),
     Text(String),
+    Due(DateData),
 }
 
 impl TodoElement {
+    fn project(str: &str)-> TodoElement {
+        TodoElement::Project(String::from(str))
+    }
+
+    fn context(str: &str)-> TodoElement {
+        TodoElement::Context(String::from(str))
+    }
+
+    fn text(str: &str)-> TodoElement {
+        TodoElement::Text(String::from(str))
+    }
 
     fn create_prefix_parser(prefix:char, element_constructor: &'static dyn Fn(String)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
         Box::new(move |input: &str| {
