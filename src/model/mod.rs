@@ -19,6 +19,7 @@ pub enum TodoElement {
     Context(String),
     Text(String),
     Due(DateData),
+    Threshold(DateData),
 }
 
 impl TodoElement {
@@ -56,26 +57,36 @@ impl TodoElement {
         Result::Ok(TodoElement::text(input))
     }
 
-    fn try_parse_due(input: &str) -> Result<TodoElement, ParsingError> {
-        if let Some(str_date) = input.strip_prefix("due:") {
-            let x:Vec<&str> = str_date.split('-').collect();
-            match (x.get(0),x.get(1),x.get(2)) {
-                (Some(year_str), Some(month_str), Some(day_str)) => {
-                    Result::Ok(
-                        TodoElement::Due(
-                            DateData{
-                                year: year_str.parse::<u16>().map_err(|_|{ParsingError{message:"error parsing year"}})?,
-                                month: month_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing month"}})?,
-                                day: day_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing day"}})?
-                            }
+    fn create_date_parser(prefix: &'static str, constructor:&'static dyn Fn(DateData)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
+        Box::new(move |input: &str| {
+            if let Some(date_str) = input.strip_prefix(prefix) {
+                let x:Vec<&str> = date_str.split('-').collect();
+                match (x.get(0),x.get(1),x.get(2)) {
+                    (Some(year_str), Some(month_str), Some(day_str)) => {
+                        Result::Ok(
+                            constructor(
+                                DateData{
+                                    year: year_str.parse::<u16>().map_err(|_|{ParsingError{message:"error parsing year"}})?,
+                                    month: month_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing month"}})?,
+                                    day: day_str.parse::<u8>().map_err(|_|{ParsingError{message:"error parsing day"}})?
+                                }
+                            )
                         )
-                    )
-                },
-                _ => Result::Err(ParsingError{message:"error parsing date"})
+                    },
+                    _ => Result::Err(ParsingError{message:"error parsing date"})
+                }
+            } else {
+                Result::Err(ParsingError{message:"error parsing entity"})
             }
-        } else {
-            Result::Err(ParsingError{message:"error parsing entity"})
-        }
+        })
+    }
+
+    fn try_parse_due(input: &str) -> Result<TodoElement, ParsingError> {
+        TodoElement::create_date_parser("due:", &TodoElement::Due)(input)
+    }
+    
+    fn try_parse_threshold(input: &str) -> Result<TodoElement, ParsingError> {
+        TodoElement::create_date_parser("t:", &TodoElement::Threshold)(input)
     }
     
     pub fn parse(input: &str) -> Result<TodoElement, ParsingError> {
@@ -83,6 +94,7 @@ impl TodoElement {
             TodoElement::try_parse_project, 
             TodoElement::try_parse_context, 
             TodoElement::try_parse_due,
+            TodoElement::try_parse_threshold,
             TodoElement::try_parse_text,
         ];
         let mut iterator = parsers.iter();

@@ -31,6 +31,13 @@ pub fn parse_due(){
 }
 
 #[test]
+pub fn parse_threshold(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("t:2020-07-22");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Threshold(DateData{year: y, month: m, day: d})) if y == 2020 && m == 7 && d == 22));
+}
+
+#[test]
 pub fn parse_due_falls_back_to_text_on_incorrect_format(){
     let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("due:2020-x-22");
     println!("{:?}", got);
