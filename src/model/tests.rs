@@ -45,6 +45,34 @@ pub fn parse_due_falls_back_to_text_on_incorrect_format(){
 }
 
 #[test]
+pub fn parse_recurrence_plus_one_week(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("rec:+1w");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Recurrence{plus, count, unit}) if plus && count == 1 && unit == RecurrenceTimeUnit::W));
+}
+
+#[test]
+pub fn parse_recurrence_10_days(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("rec:10d");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Recurrence{plus, count, unit}) if !plus && count == 10 && unit == RecurrenceTimeUnit::D));
+}
+
+#[test]
+pub fn parse_recurrence_plus_10_years(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("rec:+10y");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Recurrence{plus, count, unit}) if plus && count == 10 && unit == RecurrenceTimeUnit::Y));
+}
+
+#[test]
+pub fn parse_recurrence_5_months(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("rec:5m");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Recurrence{plus, count, unit}) if !plus && count == 5 && unit == RecurrenceTimeUnit::M));
+}
+
+#[test]
 pub fn parse_entry(){
     match TodoEntry::parse("+Project1 @Site1 Foo bar") {
         Result::Ok(TodoEntry{parts: todo_elements}) => {

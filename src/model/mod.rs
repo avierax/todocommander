@@ -14,12 +14,23 @@ pub struct DateData{
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub enum RecurrenceTimeUnit {
+    D,M,W,Y
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub enum TodoElement {
     Project(String),
     Context(String),
     Text(String),
     Due(DateData),
     Threshold(DateData),
+    Recurrence{
+        plus:bool,
+        count:u16,
+        unit:RecurrenceTimeUnit,
+    }
 }
 
 impl TodoElement {
@@ -88,6 +99,25 @@ impl TodoElement {
     fn try_parse_threshold(input: &str) -> Result<TodoElement, ParsingError> {
         TodoElement::create_date_parser("t:", &TodoElement::Threshold)(input)
     }
+
+    fn try_parse_recurrence(input: &str) -> Result<TodoElement, ParsingError> {
+        if let Some(rec_str) = input.strip_prefix("rec:") {
+            let x: &'static [_] = &['d','m','w','y'];
+            Result::Ok(TodoElement::Recurrence{ 
+                plus: rec_str.starts_with('+'),
+                count: rec_str.trim_start_matches('+').trim_end_matches(x).parse::<u16>().map_err(|_|{ParsingError{message:"error parsing recurrence"}})?,
+                unit: match rec_str.chars().last() {
+                    Some(x) if x == 'd' => Result::Ok(RecurrenceTimeUnit::D),
+                    Some(x) if x == 'm' => Result::Ok(RecurrenceTimeUnit::M),
+                    Some(x) if x == 'w' => Result::Ok(RecurrenceTimeUnit::W),
+                    Some(x) if x == 'y' => Result::Ok(RecurrenceTimeUnit::Y),
+                    _ => Result::Err(ParsingError{message:"error parsing recurrence"})
+                }?
+            })
+        } else {
+            Result::Err(ParsingError{message:"error parsing entity"})
+        }
+    }
     
     pub fn parse(input: &str) -> Result<TodoElement, ParsingError> {
         let parsers = [
@@ -95,6 +125,7 @@ impl TodoElement {
             TodoElement::try_parse_context, 
             TodoElement::try_parse_due,
             TodoElement::try_parse_threshold,
+            TodoElement::try_parse_recurrence,
             TodoElement::try_parse_text,
         ];
         let mut iterator = parsers.iter();
