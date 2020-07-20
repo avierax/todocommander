@@ -73,13 +73,21 @@ pub fn parse_recurrence_5_months(){
 }
 
 #[test]
+pub fn parse_recurrence_5_business_days(){
+    let got: Result<super::TodoElement, ParsingError> = TodoElement::parse("rec:5b");
+    println!("{:?}", got);
+    assert!(matches!(got, Result::Ok(super::TodoElement::Recurrence{plus, count, unit}) if !plus && count == 5 && unit == RecurrenceTimeUnit::B));
+}
+
+#[test]
 pub fn parse_entry(){
-    match TodoEntry::parse("+Project1 @Site1 Foo bar") {
+    match TodoEntry::parse("+Project1 @Site1 Foo bar due:2020-07-20 t:2020-07-26 rec:+1b") {
         Result::Ok(TodoEntry{parts: todo_elements}) => {
             for entry in vec!(
                 TodoElement::project("Project1"), 
                 TodoElement::context("Site1"),
                 TodoElement::text("Foo"),
+                TodoElement::text("bar"),
                 TodoElement::text("bar"),
             ) {
                 if ! todo_elements.contains(&entry){

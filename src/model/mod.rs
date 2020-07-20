@@ -15,7 +15,11 @@ pub struct DateData{
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum RecurrenceTimeUnit {
-    D,M,W,Y
+    B, // business day
+    D, // day
+    M, // month
+    W, // week
+    Y, // year
 }
 
 #[derive(Debug)]
@@ -102,12 +106,13 @@ impl TodoElement {
 
     fn try_parse_recurrence(input: &str) -> Result<TodoElement, ParsingError> {
         if let Some(rec_str) = input.strip_prefix("rec:") {
-            let x: &'static [_] = &['d','m','w','y'];
+            let x: &'static [_] = &['d', 'b', 'm', 'w', 'y'];
             Result::Ok(TodoElement::Recurrence{ 
                 plus: rec_str.starts_with('+'),
                 count: rec_str.trim_start_matches('+').trim_end_matches(x).parse::<u16>().map_err(|_|{ParsingError{message:"error parsing recurrence"}})?,
                 unit: match rec_str.chars().last() {
                     Some(x) if x == 'd' => Result::Ok(RecurrenceTimeUnit::D),
+                    Some(x) if x == 'b' => Result::Ok(RecurrenceTimeUnit::B),
                     Some(x) if x == 'm' => Result::Ok(RecurrenceTimeUnit::M),
                     Some(x) if x == 'w' => Result::Ok(RecurrenceTimeUnit::W),
                     Some(x) if x == 'y' => Result::Ok(RecurrenceTimeUnit::Y),
