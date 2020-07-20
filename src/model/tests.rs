@@ -89,6 +89,9 @@ pub fn parse_entry(){
                 TodoElement::text("Foo"),
                 TodoElement::text("bar"),
                 TodoElement::text("bar"),
+                TodoElement::Recurrence{plus:true, count:1, unit:RecurrenceTimeUnit::B},
+                TodoElement::Threshold(DateData{year:2020, month:7, day:26}),
+                TodoElement::Due(DateData{year:2020, month:7, day:20}),
             ) {
                 if ! todo_elements.contains(&entry){
                     panic!(" entry {:?} not found")
