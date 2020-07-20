@@ -38,6 +38,13 @@ pub enum TodoElement {
 }
 
 impl TodoElement {
+    pub fn merge_texts(element1: TodoElement, element2: TodoElement)-> TodoElement {
+        match (element1, element2) {
+            (TodoElement::Text(text1), TodoElement::Text(text2)) => TodoElement::Text(text1+" "+&text2),
+            tuple => panic!("only text element can be merged found {:?}", tuple),
+        }
+    }
+
     fn project(str: &str)-> TodoElement {
         TodoElement::Project(String::from(str))
     }
@@ -160,11 +167,18 @@ struct TodoEntry {
 impl TodoEntry {
     pub fn parse(data:&str) -> Result<TodoEntry, ParsingError>{
         let mut result = TodoEntry { parts : Vec::new() };
-        let mut last_element:Option<&TodoElement> = Option::None;
+        let mut last_element_was_text : bool = false;
         for split in data.split_whitespace() {
-            let element = TodoElement::parse(split).unwrap();
-            last_element = Option::Some(&element);
-            result.parts.push(element);
+            let element:TodoElement = TodoElement::parse(split).unwrap();
+            if element.is_text() && last_element_was_text {
+                let len = result.parts.len();
+                let last = result.parts.remove(len - 1);
+                let new = TodoElement::merge_texts(last, element);
+                result.parts.push(new);
+            } else {
+                last_element_was_text = element.is_text();
+                result.parts.push(element);
+            }
         }
         Result::Ok(result)
     }

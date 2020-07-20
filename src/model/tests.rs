@@ -86,9 +86,7 @@ pub fn parse_entry(){
             for entry in vec!(
                 TodoElement::project("Project1"), 
                 TodoElement::context("Site1"),
-                TodoElement::text("Foo"),
-                TodoElement::text("bar"),
-                TodoElement::text("bar"),
+                TodoElement::text("Foo bar"),
                 TodoElement::Recurrence{plus:true, count:1, unit:RecurrenceTimeUnit::B},
                 TodoElement::Threshold(DateData{year:2020, month:7, day:26}),
                 TodoElement::Due(DateData{year:2020, month:7, day:20}),
