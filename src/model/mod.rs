@@ -87,10 +87,6 @@ impl TodoElement {
         TodoElement::create_prefix_parser('@', &TodoElement::context)(input)
     }
 
-    fn try_parse_text(input: &str) -> Result<TodoElement, ParsingError> {
-        Result::Ok(TodoElement::text(input))
-    }
-
     fn create_date_parser(
         prefix: &'static str,
         constructor: &'static dyn Fn(DateData) -> TodoElement,
@@ -160,24 +156,20 @@ impl TodoElement {
             })
         }
     }
-    pub fn parse(input: &str) -> Result<TodoElement, ParsingError> {
-        let parsers = [
+    pub fn parse(input: &str) -> TodoElement {
+        for parser in &[
             TodoElement::try_parse_project,
             TodoElement::try_parse_context,
             TodoElement::try_parse_due,
             TodoElement::try_parse_threshold,
             TodoElement::try_parse_recurrence,
-            TodoElement::try_parse_text,
-        ];
-        let mut iterator = parsers.iter();
-        let mut last_error: Option<Result<TodoElement, ParsingError>> = Option::None;
-        while let Some(parser) = iterator.next() {
+        ] {
             match parser(input) {
-                parse_result @ Ok(_) => return parse_result,
-                error @ Err(_) => last_error = Option::Some(error),
+                Ok(element) => return element,
+                _ => (), // do nothing with the error, they only exist as a form of documentation and to support unit testing
             }
         }
-        last_error.unwrap()
+        TodoElement::text(input)
     }
 }
 
@@ -207,7 +199,7 @@ impl TodoEntry {
     pub fn parse(data: &str) -> Result<TodoEntry, ParsingError> {
         let mut result = TodoEntry { parts: Vec::new() };
         for split in data.split_whitespace() {
-            result.push(TodoElement::parse(split).unwrap());
+            result.push(TodoElement::parse(split));
         }
         Result::Ok(result)
     }
