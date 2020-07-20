@@ -50,6 +50,14 @@ impl TodoElement {
         TodoElement::Text(String::from(str))
     }
 
+    pub fn is_text(self: &TodoElement)->bool {
+        if let TodoElement::Text(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
     fn create_prefix_parser(prefix:char, element_constructor: &'static dyn Fn(&str)->TodoElement)->Box<dyn Fn(&str)-> Result<TodoElement, ParsingError>> {
         Box::new(move |input: &str| {
             if let Some(data) = input.strip_prefix(prefix) {
@@ -152,8 +160,11 @@ struct TodoEntry {
 impl TodoEntry {
     pub fn parse(data:&str) -> Result<TodoEntry, ParsingError>{
         let mut result = TodoEntry { parts : Vec::new() };
+        let mut last_element:Option<&TodoElement> = Option::None;
         for split in data.split_whitespace() {
-            result.parts.push(TodoElement::parse(split).unwrap());
+            let element = TodoElement::parse(split).unwrap();
+            last_element = Option::Some(&element);
+            result.parts.push(element);
         }
         Result::Ok(result)
     }
