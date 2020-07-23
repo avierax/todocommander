@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub mod tests;
 
 use common::*;
@@ -121,7 +119,7 @@ impl TodoElement {
     }
 
     fn try_parse_due(input: &str) -> Result<TodoElement, ParsingError> {
-        TodoElement::create_date_parser("due:", &TodoElement::Due)(input)
+        TodoElement::create_date_parser("due:", &TodoElement::Due)(input)   
     }
     fn try_parse_threshold(input: &str) -> Result<TodoElement, ParsingError> {
         TodoElement::create_date_parser("t:", &TodoElement::Threshold)(input)
