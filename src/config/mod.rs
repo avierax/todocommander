@@ -22,10 +22,10 @@ impl Config {
 #[derive(Eq)]
 #[derive(Debug)]
 pub struct ArgumentDef {
-    long_form: &'static str,
-    short_form: Option<&'static str>,
-    help_message: &'static str,
-    mandatory: bool,
+    pub long_form: &'static str,
+    pub short_form: Option<&'static str>,
+    pub help_message: &'static str,
+    pub mandatory: bool,
 }
 
 struct ArgumentDefAccessor {
@@ -89,6 +89,7 @@ pub fn parse_arguments(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
             _ =>  ()
         }
     }
+        
     if ! unset_arguments.is_empty() {
         Result::Err(unset_arguments)
     } else {
