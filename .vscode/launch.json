@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["a", "b"],
+            "args": ["--todo-file", "a", "--done-file", "b"],
             "cwd": "${workspaceFolder}"
         },
         {

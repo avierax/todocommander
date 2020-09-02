@@ -1,6 +1,7 @@
 use std::env::Args;
 use std::collections::hash_set::HashSet;
 
+#[derive(Debug)]
 pub struct Config {
     todo_filename: Option<String>,
     done_filename: Option<String>,
