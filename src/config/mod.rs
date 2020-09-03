@@ -3,8 +3,8 @@ use std::collections::hash_set::HashSet;
 
 #[derive(Debug)]
 pub struct Config {
-    todo_filename: Option<String>,
-    done_filename: Option<String>,
+    pub todo_filename: Option<String>,
+    pub done_filename: Option<String>,
 }
 
 impl Config {
@@ -64,7 +64,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
 ];
 
 
-pub fn parse_arguments(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
+pub fn parse_config(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
 
     let mut config:Config = Config{ 
         todo_filename: Option::None,
