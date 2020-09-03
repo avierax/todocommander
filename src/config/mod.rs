@@ -7,16 +7,6 @@ pub struct Config {
     pub done_filename: Option<String>,
 }
 
-impl Config {
-    pub fn set_todo_filename(self:&mut Config, value: String){
-        self.todo_filename = Option::Some(value);
-    }
-
-    pub fn set_done_filename(self:&mut Config, value: String){
-        self.done_filename = Option::Some(value);
-    }
-}
-
 #[allow(dead_code)]
 pub enum Command {
     Do{
@@ -33,6 +23,16 @@ pub struct Arguments {
     pub command: Command,
 }
 
+impl Arguments {
+    pub fn set_todo_filename(self:&mut Arguments, value: String){
+        self.config.todo_filename = Option::Some(value);
+    }
+
+    pub fn set_done_filename(self:&mut Arguments, value: String){
+        self.config.done_filename = Option::Some(value);
+    }
+}
+
 #[derive(PartialEq)]
 #[derive(Hash)]
 #[derive(Eq)]
@@ -46,7 +46,7 @@ pub struct ArgumentDef {
 
 struct ArgumentDefAccessor {
     argument_def: ArgumentDef,
-    accessor: &'static dyn Fn(&mut Config, String)->(),
+    accessor: &'static dyn Fn(&mut Arguments, String)->(),
 }
 
 fn find_arg_def<'a>(arg:&str, argument_defs_accessors:&'a [ArgumentDefAccessor]) -> Option<&'a ArgumentDefAccessor> {
@@ -66,7 +66,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
             help_message: "todo file",
             mandatory: true,
         },
-        accessor: &Config::set_todo_filename,
+        accessor: &Arguments::set_todo_filename,
     },
     ArgumentDefAccessor {
         argument_def: ArgumentDef {
@@ -75,15 +75,18 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
             help_message: "done file",
             mandatory: true,
         },
-        accessor: &Config::set_done_filename
+        accessor: &Arguments::set_done_filename
     }
 ];
 
 pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>> {
 
-    let mut config:Config = Config{ 
-        todo_filename: Option::None,
-        done_filename: Option::None,
+    let mut arguments = Arguments {
+        config:Config { 
+            todo_filename: Option::None,
+            done_filename: Option::None,
+        },
+        command: Command::List,
     };
 
     let mut unset_arguments = HashSet::new();
@@ -98,7 +101,7 @@ pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>>
         match find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
             Option::Some(arg_def) => {
                 let argument = args.next();
-                (arg_def.accessor)(&mut config, argument.expect(&format!("argument {} not present", &arg)));
+                (arg_def.accessor)(&mut arguments, argument.expect(&format!("argument {} not present", &arg)));
                 unset_arguments.remove(&arg_def.argument_def);
             },
             _ =>  ()
@@ -108,6 +111,6 @@ pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>>
     if ! unset_arguments.is_empty() {
         Result::Err(unset_arguments)
     } else {
-        Result::Ok(Arguments{config, command:Command::List})
+        Result::Ok(arguments)
     }
 }
