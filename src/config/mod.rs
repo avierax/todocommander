@@ -1,5 +1,4 @@
 use std::env::Args;
-use std::collections::hash_set::HashSet;
 
 #[derive(Debug)]
 pub struct Config {
@@ -33,9 +32,6 @@ impl Arguments {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Hash)]
-#[derive(Eq)]
 #[derive(Debug)]
 pub struct ArgumentDef {
     pub long_form: &'static str,
@@ -49,10 +45,10 @@ struct ArgumentDefAccessor {
     accessor: &'static dyn Fn(&mut Arguments, String)->(),
 }
 
-fn find_arg_def<'a>(arg:&str, argument_defs_accessors:&'a [ArgumentDefAccessor]) -> Option<&'a ArgumentDefAccessor> {
-    for arg_def in argument_defs_accessors.iter() {
+fn find_arg_def<'a>(arg:&str, argument_defs_accessors:&'a [ArgumentDefAccessor]) -> Option<(usize,&'a ArgumentDefAccessor)> {
+    for (i,arg_def) in argument_defs_accessors.iter().enumerate() {
         if arg_def.argument_def.long_form == arg || arg_def.argument_def.short_form.unwrap() == arg {
-            return Option::Some(arg_def);
+            return Option::Some((i,arg_def));
         }
     }
     Option::None
@@ -79,8 +75,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
     }
 ];
 
-pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>> {
-
+pub fn parse_arguments(args:&mut Args)->Result<Arguments, Vec<&ArgumentDef>> {
     let mut arguments = Arguments {
         config:Config { 
             todo_filename: Option::None,
@@ -89,26 +84,34 @@ pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>>
         command: Command::List,
     };
 
-    let mut unset_arguments = HashSet::new();
-    for arg_def_acc in ARGUMENT_DEFS_ACCESSORS.iter() {
+    let mut must_include_args:Vec<bool> = Vec::new();
+    for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
         let argument_def: &ArgumentDef = &arg_def_acc.argument_def;
         if argument_def.mandatory {
-            unset_arguments.insert(argument_def);
+            must_include_args[i] = true;
         }
     }
     
     while let Option::Some(arg) = args.next() {
         match find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
-            Option::Some(arg_def) => {
+            Option::Some((i,arg_def)) => {
                 let argument = args.next();
                 (arg_def.accessor)(&mut arguments, argument.expect(&format!("argument {} not present", &arg)));
-                unset_arguments.remove(&arg_def.argument_def);
+                must_include_args[i]=false;
             },
             _ =>  ()
         }
     }
-        
-    if ! unset_arguments.is_empty() {
+
+    let mut unset_arguments:Vec<&ArgumentDef> = Vec::new();
+
+    for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
+        if must_include_args[i] {
+            unset_arguments.push(&arg_def_acc.argument_def);
+        }
+    }
+
+    if unset_arguments.len() > 0 {
         Result::Err(unset_arguments)
     } else {
         Result::Ok(arguments)
