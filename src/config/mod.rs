@@ -17,6 +17,21 @@ impl Config {
     }
 }
 
+#[allow(dead_code)]
+pub enum Command {
+    Do{
+        id:u16,
+    },
+    Undo{
+        id:u16,
+    },
+    List
+}
+
+pub struct Arguments {
+    pub config: Config,
+    pub command: Command,
+}
 
 #[derive(PartialEq)]
 #[derive(Hash)]
@@ -42,6 +57,7 @@ fn find_arg_def<'a>(arg:&str, argument_defs_accessors:&'a [ArgumentDefAccessor])
     }
     Option::None
 }
+
 const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
     ArgumentDefAccessor {
         argument_def: ArgumentDef {
@@ -63,8 +79,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
     }
 ];
 
-
-pub fn parse_config(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
+pub fn parse_arguments(args:&mut Args)->Result<Arguments, HashSet<&ArgumentDef>> {
 
     let mut config:Config = Config{ 
         todo_filename: Option::None,
@@ -83,8 +98,7 @@ pub fn parse_config(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
         match find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
             Option::Some(arg_def) => {
                 let argument = args.next();
-                let message = format!("argument {} not present", &arg);
-                (arg_def.accessor)(&mut config, argument.expect(&message));
+                (arg_def.accessor)(&mut config, argument.expect(&format!("argument {} not present", &arg)));
                 unset_arguments.remove(&arg_def.argument_def);
             },
             _ =>  ()
@@ -94,6 +108,6 @@ pub fn parse_config(args:&mut Args)->Result<Config, HashSet<&ArgumentDef>> {
     if ! unset_arguments.is_empty() {
         Result::Err(unset_arguments)
     } else {
-        Result::Ok(config)
+        Result::Ok(Arguments{config, command:Command::List})
     }
 }
