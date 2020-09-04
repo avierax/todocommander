@@ -1,5 +1,3 @@
-use std::env::Args;
-
 #[derive(Debug)]
 pub struct Config {
     pub todo_filename: Option<String>,
@@ -75,7 +73,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
     }
 ];
 
-pub fn parse_arguments(args:&mut Args)->Result<Arguments, Vec<&ArgumentDef>> {
+pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, Vec<&ArgumentDef>> {
     let mut arguments = Arguments {
         config:Config { 
             todo_filename: Option::None,
