@@ -1,9 +1,12 @@
+mod tests;
+
 #[derive(Debug)]
 pub struct Config {
     pub todo_filename: Option<String>,
     pub done_filename: Option<String>,
 }
 
+#[derive(Debug)]
 #[allow(dead_code)]
 pub enum Command {
     Do{
@@ -15,6 +18,7 @@ pub enum Command {
     List
 }
 
+#[derive(Debug)]
 pub struct Arguments {
     pub config: Config,
     pub command: Command,
@@ -85,9 +89,7 @@ pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, V
     let mut must_include_args:Vec<bool> = Vec::new();
     for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
         let argument_def: &ArgumentDef = &arg_def_acc.argument_def;
-        if argument_def.mandatory {
-            must_include_args[i] = true;
-        }
+        must_include_args.push(argument_def.mandatory);
     }
     
     while let Option::Some(arg) = args.next() {

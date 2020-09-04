@@ -1,4 +1,4 @@
-    #[test]
+#[test]
 pub fn parse_project(){
     use super::*;
     let got: super::TodoElement = TodoElement::parse("+Project1");
