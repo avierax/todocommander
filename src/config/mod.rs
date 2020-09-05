@@ -87,7 +87,7 @@ pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, V
     };
 
     let mut must_include_args:Vec<bool> = Vec::new();
-    for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
+    for arg_def_acc in ARGUMENT_DEFS_ACCESSORS.iter() {
         let argument_def: &ArgumentDef = &arg_def_acc.argument_def;
         must_include_args.push(argument_def.mandatory);
     }
