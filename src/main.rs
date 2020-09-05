@@ -3,10 +3,11 @@ mod config;
 
 use std::env;
 use std::process::exit;
+use config::ErrorType;
 
 fn main() {
     match config::parse_arguments(&mut env::args()) {
-        Result::Err(unset_arguments) =>  {
+        Result::Err(ErrorType::MissingArguments(unset_arguments)) =>  {
             for unset_argument in unset_arguments {
                 eprintln!("error unset argument {}", unset_argument.long_form);
                 exit(1);

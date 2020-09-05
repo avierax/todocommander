@@ -77,7 +77,11 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
     }
 ];
 
-pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, Vec<&ArgumentDef>> {
+pub enum ErrorType<'a> {
+    MissingArguments(Vec<&'a ArgumentDef>)
+}
+
+pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, ErrorType> {
     let mut arguments = Arguments {
         config:Config { 
             todo_filename: Option::None,
@@ -112,7 +116,7 @@ pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, V
     }
 
     if unset_arguments.len() > 0 {
-        Result::Err(unset_arguments)
+        Result::Err(ErrorType::MissingArguments(unset_arguments))
     } else {
         Result::Ok(arguments)
     }
