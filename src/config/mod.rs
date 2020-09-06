@@ -9,13 +9,9 @@ pub struct Config {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub enum Command {
-    Do{
-        id:u16,
-    },
-    Undo{
-        id:u16,
-    },
-    List
+    Do { id: u16 },
+    Undo { id: u16 },
+    List,
 }
 
 #[derive(Debug)]
@@ -24,13 +20,13 @@ pub struct Arguments {
     pub command: Command,
 }
 
-impl Arguments {
-    pub fn set_todo_filename(self:&mut Arguments, value: String){
-        self.config.todo_filename = Option::Some(value);
+impl Config {
+    pub fn set_todo_filename(self: &mut Config, value: String) {
+        self.todo_filename = Option::Some(value);
     }
 
-    pub fn set_done_filename(self:&mut Arguments, value: String){
-        self.config.done_filename = Option::Some(value);
+    pub fn set_done_filename(self: &mut Config, value: String) {
+        self.done_filename = Option::Some(value);
     }
 }
 
@@ -44,19 +40,23 @@ pub struct ArgumentDef {
 
 struct ArgumentDefAccessor {
     argument_def: ArgumentDef,
-    accessor: &'static dyn Fn(&mut Arguments, String)->(),
+    accessor: &'static dyn Fn(&mut Config, String) -> (),
 }
 
-fn find_arg_def<'a>(arg:&str, argument_defs_accessors:&'a [ArgumentDefAccessor]) -> Option<(usize,&'a ArgumentDefAccessor)> {
-    for (i,arg_def) in argument_defs_accessors.iter().enumerate() {
-        if arg_def.argument_def.long_form == arg || arg_def.argument_def.short_form.unwrap() == arg {
-            return Option::Some((i,arg_def));
+fn find_arg_def<'a>(
+    arg: &str,
+    argument_defs_accessors: &'a [ArgumentDefAccessor],
+) -> Option<(usize, &'a ArgumentDefAccessor)> {
+    for (i, arg_def) in argument_defs_accessors.iter().enumerate() {
+        if arg_def.argument_def.long_form == arg || arg_def.argument_def.short_form.unwrap() == arg
+        {
+            return Option::Some((i, arg_def));
         }
     }
     Option::None
 }
 
-const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
+const ARGUMENT_DEFS_ACCESSORS: &'static [ArgumentDefAccessor] = &[
     ArgumentDefAccessor {
         argument_def: ArgumentDef {
             long_form: "--todo-file",
@@ -64,7 +64,7 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
             help_message: "todo file",
             mandatory: true,
         },
-        accessor: &Arguments::set_todo_filename,
+        accessor: &Config::set_todo_filename,
     },
     ArgumentDefAccessor {
         argument_def: ArgumentDef {
@@ -73,41 +73,45 @@ const ARGUMENT_DEFS_ACCESSORS:&'static [ArgumentDefAccessor] = &[
             help_message: "done file",
             mandatory: true,
         },
-        accessor: &Arguments::set_done_filename
-    }
+        accessor: &Config::set_done_filename,
+    },
 ];
 
 pub enum ErrorType<'a> {
-    MissingArguments(Vec<&'a ArgumentDef>)
+    MissingArguments(Vec<&'a ArgumentDef>),
 }
 
-pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, ErrorType> {
-    let mut arguments = Arguments {
-        config:Config { 
-            todo_filename: Option::None,
-            done_filename: Option::None,
-        },
-        command: Command::List,
+pub fn parse_options(
+    args: &mut dyn Iterator<Item = String>,
+) -> Result<(Config, /*unprocessed args*/ Vec<String>), ErrorType> {
+    let mut config = Config {
+        todo_filename: Option::None,
+        done_filename: Option::None,
     };
-
-    let mut must_include_args:Vec<bool> = Vec::new();
+    let mut must_include_args: Vec<bool> = Vec::new();
     for arg_def_acc in ARGUMENT_DEFS_ACCESSORS.iter() {
         let argument_def: &ArgumentDef = &arg_def_acc.argument_def;
         must_include_args.push(argument_def.mandatory);
     }
-    
+
+    let mut unprocessed_args: Vec<String> = Vec::new();
     while let Option::Some(arg) = args.next() {
         match find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
-            Option::Some((i,arg_def)) => {
+            Option::Some((i, arg_def)) => {
                 let argument = args.next();
-                (arg_def.accessor)(&mut arguments, argument.expect(&format!("argument {} not present", &arg)));
-                must_include_args[i]=false;
-            },
-            _ =>  ()
+                (arg_def.accessor)(
+                    &mut config,
+                    argument.expect(&format!("argument {} not present", &arg)),
+                );
+                must_include_args[i] = false;
+            }
+            _ => {
+                unprocessed_args.push(arg);
+            }
         }
     }
 
-    let mut unset_arguments:Vec<&ArgumentDef> = Vec::new();
+    let mut unset_arguments: Vec<&ArgumentDef> = Vec::new();
 
     for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
         if must_include_args[i] {
@@ -115,9 +119,16 @@ pub fn parse_arguments(args:&mut dyn Iterator<Item=String>)->Result<Arguments, E
         }
     }
 
-    if unset_arguments.len() > 0 {
+    if !unset_arguments.is_empty() {
         Result::Err(ErrorType::MissingArguments(unset_arguments))
     } else {
-        Result::Ok(arguments)
+        Result::Ok((config, unprocessed_args))
     }
+}
+
+pub fn parse_arguments(args: &mut dyn Iterator<Item = String>) -> Result<Arguments, ErrorType> {
+    parse_options(args).map(|config_and_rest| Arguments {
+        config: config_and_rest.0,
+        command: Command::List,
+    })
 }
