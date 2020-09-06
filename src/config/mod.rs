@@ -81,7 +81,7 @@ pub enum ErrorType<'a> {
     MissingArguments(Vec<&'a ArgumentDef>),
 }
 
-pub fn parse_options(
+pub fn parse_config(
     args: &mut dyn Iterator<Item = String>,
 ) -> Result<(Config, /*unprocessed args*/ Vec<String>), ErrorType> {
     let mut config = Config {
@@ -96,18 +96,19 @@ pub fn parse_options(
 
     let mut unprocessed_args: Vec<String> = Vec::new();
     while let Option::Some(arg) = args.next() {
-        match find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
-            Option::Some((i, arg_def)) => {
-                let argument = args.next();
-                (arg_def.accessor)(
-                    &mut config,
-                    argument.expect(&format!("argument {} not present", &arg)),
-                );
-                must_include_args[i] = false;
-            }
-            _ => {
+        if let Option::Some((i, arg_def)) = find_arg_def(&arg, &ARGUMENT_DEFS_ACCESSORS) {
+            let argument = args.next();
+            (arg_def.accessor)(
+                &mut config,
+                argument.expect(&format!("argument {} not present", &arg)),
+            );
+            must_include_args[i] = false;
+        } else {
+            unprocessed_args.push(arg);
+            while let Option::Some(arg) = args.next() {
                 unprocessed_args.push(arg);
             }
+            break;
         }
     }
 
@@ -127,7 +128,7 @@ pub fn parse_options(
 }
 
 pub fn parse_arguments(args: &mut dyn Iterator<Item = String>) -> Result<Arguments, ErrorType> {
-    parse_options(args).map(|config_and_rest| Arguments {
+    parse_config(args).map(|config_and_rest| Arguments {
         config: config_and_rest.0,
         command: Command::List,
     })
