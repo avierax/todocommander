@@ -47,12 +47,29 @@ pub fn parse_erroneous_arguments_2() {
 }
 
 #[test]
+pub fn parse_arguments_1() {
+    use super::*;
+    let parameters: Vec<&str> = vec!["--done-file", "a", "--todo-file", "b", "do", "36"];
+    let iter: &mut dyn Iterator<Item = String> = &mut parameters.iter().map(|s| String::from(*s));
+    assert!(matches!(
+        parse_arguments(iter),
+        Result::Ok(Arguments {
+            config: Config {
+                todo_filename: Option::Some(b),
+                done_filename: Option::Some(a),
+            },
+            command: Command::Do { id: 36 },
+        }) if a == "a" && b == "b"
+    ));
+}
+
+#[test]
 pub fn parse_config_unprocessed_args() {
     use super::*;
     let parameters: Vec<&str> = vec!["--done-file", "a", "--todo-file", "b", "do", "36"];
     let iter: &mut dyn Iterator<Item = String> = &mut parameters.iter().map(|s| String::from(*s));
     match parse_config(iter) {
-        Result::Ok((_, unprocessed_args)) if unprocessed_args == vec!["do", "36"]=> (),
-        _ => panic!("test failed")
+        Result::Ok((_, unprocessed_args)) if unprocessed_args == vec!["do", "36"] => (),
+        _ => panic!("test failed"),
     }
 }

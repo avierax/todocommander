@@ -31,6 +31,7 @@ impl Config {
 }
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct ArgumentDef {
     pub long_form: &'static str,
     pub short_form: Option<&'static str>,
@@ -77,8 +78,9 @@ const ARGUMENT_DEFS_ACCESSORS: &'static [ArgumentDefAccessor] = &[
     },
 ];
 
-pub enum ErrorType<'a> {
-    MissingArguments(Vec<&'a ArgumentDef>),
+pub enum ErrorType {
+    MissingArguments(Vec<ArgumentDef>),
+    CannotIdentifyCommand(Vec<String>),
 }
 
 pub fn parse_config(
@@ -112,11 +114,11 @@ pub fn parse_config(
         }
     }
 
-    let mut unset_arguments: Vec<&ArgumentDef> = Vec::new();
+    let mut unset_arguments: Vec<ArgumentDef> = Vec::new();
 
     for (i, arg_def_acc) in ARGUMENT_DEFS_ACCESSORS.iter().enumerate() {
         if must_include_args[i] {
-            unset_arguments.push(&arg_def_acc.argument_def);
+            unset_arguments.push(arg_def_acc.argument_def.clone());
         }
     }
 
@@ -127,9 +129,25 @@ pub fn parse_config(
     }
 }
 
+pub fn parse_command(command: &Vec<String>) -> Result<Command, ErrorType> {
+    match command[0].as_str() {
+        "do" => {
+            let id = command[1].parse::<u16>().expect("error parsing task id");
+            Result::Ok(Command::Do{id})
+        },
+        "list" => Result::Ok(Command::List),
+        _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
+    }
+}
+
 pub fn parse_arguments(args: &mut dyn Iterator<Item = String>) -> Result<Arguments, ErrorType> {
-    parse_config(args).map(|config_and_rest| Arguments {
-        config: config_and_rest.0,
-        command: Command::List,
-    })
+    parse_config(args).and_then(|config_and_rest| {
+            parse_command(&config_and_rest.1).map(|command| {
+                Arguments {
+                    config:config_and_rest.0,
+                    command
+                }
+            })
+        }
+    )
 }

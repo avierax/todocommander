@@ -13,6 +13,10 @@ fn main() {
                 exit(1);
             }
         },
+        Result::Err(ErrorType::CannotIdentifyCommand(_)) => {
+            eprintln!("error cannot identify command");
+            exit(2);
+        }
         #[allow(unused_variables)]
         Result::Ok(arguments) => {
             // println!("Config is {:#?}", config);
