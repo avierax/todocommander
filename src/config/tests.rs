@@ -58,8 +58,25 @@ pub fn parse_arguments_1() {
                 todo_filename: Option::Some(b),
                 done_filename: Option::Some(a),
             },
-            command: Command::Do { id: 36 },
+            command: Command::Do(36),
         }) if a == "a" && b == "b"
+    ));
+}
+
+#[test]
+pub fn parse_arguments_2() {
+    use super::*;
+    let parameters = vec!["--done-file", "a", "--todo-file", "b", "add", "foo bar", "baz"];
+    let iter: &mut dyn Iterator<Item = String> = &mut parameters.iter().map(|s| String::from(*s));
+    assert!(matches!(
+        parse_arguments(iter),
+        Result::Ok(Arguments {
+            config: Config {
+                todo_filename: Option::Some(b),
+                done_filename: Option::Some(a),
+            },
+            command: Command::Add(text),
+        }) if a == "a" && b == "b" && text == "foo bar baz"
     ));
 }
 

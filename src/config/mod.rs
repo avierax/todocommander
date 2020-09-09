@@ -9,9 +9,11 @@ pub struct Config {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub enum Command {
-    Do { id: u16 },
-    Undo { id: u16 },
+    Add (String),
+    Archive (u16),
+    Do(u16),
     List,
+    Undo(u16),
 }
 
 #[derive(Debug)]
@@ -30,8 +32,7 @@ impl Config {
     }
 }
 
-#[derive(Debug)]
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ArgumentDef {
     pub long_form: &'static str,
     pub short_form: Option<&'static str>,
@@ -133,21 +134,19 @@ pub fn parse_command(command: &Vec<String>) -> Result<Command, ErrorType> {
     match command[0].as_str() {
         "do" => {
             let id = command[1].parse::<u16>().expect("error parsing task id");
-            Result::Ok(Command::Do{id})
-        },
+            Result::Ok(Command::Do(id))
+        }
         "list" => Result::Ok(Command::List),
+        "add" => Result::Ok(Command::Add(command[1..].join(" "))),
         _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
     }
 }
 
 pub fn parse_arguments(args: &mut dyn Iterator<Item = String>) -> Result<Arguments, ErrorType> {
     parse_config(args).and_then(|config_and_rest| {
-            parse_command(&config_and_rest.1).map(|command| {
-                Arguments {
-                    config:config_and_rest.0,
-                    command
-                }
-            })
-        }
-    )
+        parse_command(&config_and_rest.1).map(|command| Arguments {
+            config: config_and_rest.0,
+            command,
+        })
+    })
 }
