@@ -209,6 +209,19 @@ struct TodoData {
     entries: Vec<TodoEntry>,
 }
 
+struct Model {
+    todo_data: TodoData,
+    done_data: TodoData,
+}
+
+impl Model {
+    pub fn execute(self: &mut Model, command:super::config::Command) -> Result<(), &str>{
+        match command {
+            _ => Result::Err("Operation not implemented")
+        }
+    }
+}
+
 impl TodoData {
     pub fn parse(data: &str) -> Result<TodoData, ParsingError> {
         let mut result = TodoData {
