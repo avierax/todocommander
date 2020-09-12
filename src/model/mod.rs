@@ -3,6 +3,7 @@
 pub mod tests;
 
 use common::*;
+use crate::config::Command;
 
 #[derive(Debug, PartialEq)]
 pub struct DateData {
@@ -173,6 +174,8 @@ impl TodoElement {
     }
 }
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 struct TodoEntry {
     parts: Vec<TodoElement>,
 }
@@ -205,18 +208,26 @@ impl TodoEntry {
     }
 }
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 struct TodoData {
     entries: Vec<TodoEntry>,
 }
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 struct Model {
     todo_data: TodoData,
     done_data: TodoData,
 }
 
 impl Model {
-    pub fn execute(self: &mut Model, command:super::config::Command) -> Result<(), &str>{
+    pub fn execute(self: &mut Model, command:crate::config::Command) -> Result<(), &str>{
         match command {
+            Command::Archive(offset) => {
+                self.done_data.entries.push(self.todo_data.entries.remove(offset.into()));
+                Result::Ok(())
+            },
             _ => Result::Err("Operation not implemented")
         }
     }
