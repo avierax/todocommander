@@ -233,8 +233,7 @@ impl TodoElement {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct TodoEntry {
     status: Status,
     created_date: Option<DateData>,
@@ -257,9 +256,7 @@ impl TodoEntry {
         }
         parts.push(element);
     }
-}
 
-impl TodoEntry {
     fn try_parse_status(_data: &str) -> (Status, usize){
         (Status::Open, 13)
     }
@@ -292,14 +289,26 @@ impl fmt::Display for TodoEntry {
     }
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 struct TodoData {
     entries: Vec<TodoEntry>,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+impl TodoData {
+    pub fn parse(data: &str) -> Result<TodoData, ParsingError> {
+        let mut result = TodoData {
+            entries: Vec::new(),
+        };
+        for line in data.lines() {
+            result
+                .entries
+                .push(TodoEntry::parse(line).expect("error parsing"));
+        }
+        Result::Ok(result)
+    }
+}
+
+#[derive(Debug,PartialEq)]
 struct Model {
     todo_data: TodoData,
     done_data: TodoData,
@@ -314,20 +323,6 @@ impl Model {
             },
             _ => Result::Err("Operation not implemented")
         }
-    }
-}
-
-impl TodoData {
-    pub fn parse(data: &str) -> Result<TodoData, ParsingError> {
-        let mut result = TodoData {
-            entries: Vec::new(),
-        };
-        for line in data.lines() {
-            result
-                .entries
-                .push(TodoEntry::parse(line).expect("error parsing"));
-        }
-        Result::Ok(result)
     }
 }
 
