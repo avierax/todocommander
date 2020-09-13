@@ -4,6 +4,7 @@ pub mod tests;
 
 use common::*;
 use crate::config::Command;
+use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub struct DateData {
@@ -36,6 +37,12 @@ impl DateData {
     }
 }
 
+impl fmt::Display for DateData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}-{:02}-{:02}", self.year, self.month, self.day)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum RecurrenceTimeUnit {
     B, // business day
@@ -45,13 +52,32 @@ pub enum RecurrenceTimeUnit {
     Y, // year
 }
 
+impl fmt::Display for RecurrenceTimeUnit {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 
+            match self {
+                RecurrenceTimeUnit::B => 'b',
+                RecurrenceTimeUnit::D => 'd',
+                RecurrenceTimeUnit::M => 'm',
+                RecurrenceTimeUnit::W => 'w',
+                RecurrenceTimeUnit::Y => 'y'
+            }
+        )
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Status {
     Done(Option<DateData>),
     Open
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
+pub struct Uuid {
+    uuid:u128
+}
+
+#[derive(Debug, PartialEq)]
 pub enum TodoElement {
     Context(String),
     Due(DateData),
@@ -63,7 +89,27 @@ pub enum TodoElement {
     },
     Text(String),
     Threshold(DateData),
-    Uuid(u128),
+    Uuid(Uuid),
+}
+
+impl fmt::Display for TodoElement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TodoElement::Context(context) => write!(f, "@{}", context),
+            TodoElement::Due(date_data) => write!(f, "due:{}", date_data),
+            TodoElement::Project(project) => write!(f, "+{}", project),
+            TodoElement::Recurrence { plus, count, unit } => {
+                let mut repr = String::new();
+                if *plus { repr.push('+') }
+                repr.push_str(&format!("{}", count));
+                repr.push_str(&format!("{}", unit));
+                write!(f, "rec:{}", repr)
+            },
+            TodoElement::Text(text) => write!(f, "{}", text),
+            TodoElement::Threshold(date_data) => write!(f, "t:{}", date_data),
+            TodoElement::Uuid(_) => panic!("not implemented"),
+        }
+    }
 }
 
 impl TodoElement {
@@ -237,6 +283,12 @@ impl TodoEntry {
             TodoEntry::push(&mut parts, TodoElement::parse(split));
         }
         Result::Ok(TodoEntry { status, created_date, parts })
+    }
+}
+
+impl fmt::Display for TodoEntry {
+    fn fmt(self: &TodoEntry, f:&mut fmt::Formatter<'_>)-> fmt::Result {
+        write!(f, "{}", self.parts.iter().map(|p|{ format!("{}", p) }).collect::<Vec<String>>().join(" "))
     }
 }
 

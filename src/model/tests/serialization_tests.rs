@@ -108,7 +108,11 @@ pub fn parse_entry(){
     }
 }
 
-// #[test]
-// pub fn serialization_roundtrip(){
-    // TodoEntry::parse("")
-// }
+#[test]
+pub fn serialization_roundtrip(){
+    let original = "+Project1 @Site1 Foo bar due:2020-07-20 t:2020-07-26 rec:+1b";
+    let entry = TodoEntry::parse(original).unwrap();
+    let text = format!("{}", entry);
+    assert_eq!(text, original);
+
+}
