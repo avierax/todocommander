@@ -12,6 +12,30 @@ pub struct DateData {
     day: u8,
 }
 
+impl DateData {
+    pub fn parse(date_str:&str)->Result<DateData, ParsingError>{
+        let x: Vec<&str> = date_str.split('-').collect();
+        match (x.get(0), x.get(1), x.get(2)) {
+            (Some(year_str), Some(month_str), Some(day_str)) => {
+                Result::Ok(DateData {
+                    year: year_str.parse::<u16>().map_err(|_| ParsingError {
+                        message: "error parsing year",
+                    })?,
+                    month: month_str.parse::<u8>().map_err(|_| ParsingError {
+                        message : "error parsing month",
+                    })?,
+                    day: day_str.parse::<u8>().map_err(|_| ParsingError {
+                        message: "error parsing day",
+                    })?,
+                })
+            }
+            _ => Result::Err(ParsingError {
+                message: "error parsing date",
+            }),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum RecurrenceTimeUnit {
     B, // business day
@@ -22,17 +46,24 @@ pub enum RecurrenceTimeUnit {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Status {
+    Done(Option<DateData>),
+    Open
+}
+
+#[derive(PartialEq, Debug)]
 pub enum TodoElement {
-    Project(String),
     Context(String),
-    Text(String),
     Due(DateData),
-    Threshold(DateData),
+    Project(String),
     Recurrence {
         plus: bool,
         count: u16,
         unit: RecurrenceTimeUnit,
     },
+    Text(String),
+    Threshold(DateData),
+    Uuid(u128),
 }
 
 impl TodoElement {
@@ -94,25 +125,7 @@ impl TodoElement {
     ) -> Box<dyn Fn(&str) -> Result<TodoElement, ParsingError>> {
         Box::new(move |input: &str| {
             if let Some(date_str) = input.strip_prefix(prefix) {
-                let x: Vec<&str> = date_str.split('-').collect();
-                match (x.get(0), x.get(1), x.get(2)) {
-                    (Some(year_str), Some(month_str), Some(day_str)) => {
-                        Result::Ok(constructor(DateData {
-                            year: year_str.parse::<u16>().map_err(|_| ParsingError {
-                                message: "error parsing year",
-                            })?,
-                            month: month_str.parse::<u8>().map_err(|_| ParsingError {
-                                message: "error parsing month",
-                            })?,
-                            day: day_str.parse::<u8>().map_err(|_| ParsingError {
-                                message: "error parsing day",
-                            })?,
-                        }))
-                    }
-                    _ => Result::Err(ParsingError {
-                        message: "error parsing date",
-                    }),
-                }
+                DateData::parse(date_str).map(constructor)
             } else {
                 Result::Err(ParsingError {
                     message: "error parsing entity",
@@ -177,34 +190,53 @@ impl TodoElement {
 #[derive(PartialEq)]
 #[derive(Debug)]
 struct TodoEntry {
+    status: Status,
+    created_date: Option<DateData>,
     parts: Vec<TodoElement>,
 }
 
 impl TodoEntry {
-    pub fn push(self: &mut TodoEntry, element: TodoElement) {
+    pub fn push(parts: &mut Vec<TodoElement>, element: TodoElement) {
         if element.is_text() {
-            match self.parts.last() {
+            match parts.last() {
                 Option::Some(last) if last.is_text() => {
-                    let len = self.parts.len();
-                    let last = self.parts.remove(len - 1);
+                    let len = parts.len();
+                    let last = parts.remove(len - 1);
                     let new = TodoElement::merge_texts(last, element);
-                    self.parts.push(new);
+                    parts.push(new);
                     return;
                 }
                 _ => (),
             }
         }
-        self.parts.push(element);
+        parts.push(element);
     }
 }
 
 impl TodoEntry {
+    fn try_parse_status(_data: &str) -> (Status, usize){
+        (Status::Open, 13)
+    }
+
     pub fn parse(data: &str) -> Result<TodoEntry, ParsingError> {
-        let mut result = TodoEntry { parts: Vec::new() };
-        for split in data.split_whitespace() {
-            result.push(TodoElement::parse(split));
+        let mut parts:Vec<TodoElement> = Vec::new();
+        let mut split_parts: Vec<&str> = data.split_whitespace().collect();
+        let status = if split_parts[0].starts_with("x") {
+            Status::Done(DateData::parse(split_parts[1]).ok())
+        } else {
+            Status::Open
+        };
+        if let Status::Done(Option::Some(_)) = status {
+            split_parts = split_parts[2..].into(); // skip two
         }
-        Result::Ok(result)
+        let created_date = DateData::parse(split_parts[0]).ok();
+        if let Option::Some(_) = created_date {
+            split_parts = split_parts[1..].into();
+        }
+        for split in split_parts.iter() {
+            TodoEntry::push(&mut parts, TodoElement::parse(split));
+        }
+        Result::Ok(TodoEntry { status, created_date, parts })
     }
 }
 

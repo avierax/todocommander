@@ -2,7 +2,6 @@
  * Model operation tests
  */
 
-use crate::config::Command;
 use crate::model::*;
 
 fn create_model_for_testing() -> Model {

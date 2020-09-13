@@ -86,7 +86,11 @@ pub fn parse_recurrence_5_business_days(){
 #[test]
 pub fn parse_entry(){
     match TodoEntry::parse("+Project1 @Site1 Foo bar due:2020-07-20 t:2020-07-26 rec:+1b") {
-        Result::Ok(TodoEntry{parts: todo_elements}) => {
+        Result::Ok(TodoEntry{
+            parts: todo_elements,
+            status: Status::Open,
+            created_date: Option::None,
+        }) => {
             for entry in vec!(
                 TodoElement::project("Project1"), 
                 TodoElement::context("Site1"),
@@ -96,10 +100,15 @@ pub fn parse_entry(){
                 TodoElement::Due(DateData{year:2020, month:7, day:20}),
             ) {
                 if ! todo_elements.contains(&entry){
-                    panic!(" entry {:?} not found")
+                    panic!(" entry {:?} not found", entry)
                 }
             }
         },
         _ => panic!("error while parsing entry")
     }
 }
+
+// #[test]
+// pub fn serialization_roundtrip(){
+    // TodoEntry::parse("")
+// }
