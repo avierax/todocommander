@@ -1,10 +1,12 @@
 #![allow(dead_code)]
+extern crate chrono;
 
 pub mod tests;
 
 use common::*;
 use crate::config::Command;
 use std::fmt;
+use chrono::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub struct DateData {
@@ -327,6 +329,18 @@ impl Model {
                 }).map_err(|e| {
                     e.message
                 })
+            },
+            Command::Do(index) => {
+                let date = Local::now().date();
+                let year = date.year() as u16;
+                let month = date.month() as u8;
+                let day = date.day() as u8;
+                self.todo_data.entries[index as usize].status = Status::Done(Option::Some(DateData{year, month, day}));
+                Result::Ok(())
+            },
+            Command::Undo(index) => {
+                self.todo_data.entries[index as usize].status = Status::Open;
+                Result::Ok(())
             },
             _ => Result::Err("Operation not implemented")
         }
