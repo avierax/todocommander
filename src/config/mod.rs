@@ -132,12 +132,20 @@ pub fn parse_config(
 
 pub fn parse_command(command: &Vec<String>) -> Result<Command, ErrorType> {
     match command[0].as_str() {
+        "add" => Result::Ok(Command::Add(command[1..].join(" "))),
+        "archive" => {
+            let id = command[1].parse::<u16>().expect("error parsing task id");
+            Result::Ok(Command::Archive(id))
+        }
         "do" => {
             let id = command[1].parse::<u16>().expect("error parsing task id");
             Result::Ok(Command::Do(id))
-        }
+        },
         "list" => Result::Ok(Command::List),
-        "add" => Result::Ok(Command::Add(command[1..].join(" "))),
+        "undo" => {
+            let id = command[1].parse::<u16>().expect("error parsing task id");
+            Result::Ok(Command::Undo(id))
+        },
         _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
     }
 }
