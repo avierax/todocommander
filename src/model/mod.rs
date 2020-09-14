@@ -3,10 +3,10 @@ extern crate chrono;
 
 pub mod tests;
 
-use common::*;
 use crate::config::Command;
-use std::fmt;
 use chrono::prelude::*;
+use common::*;
+use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub struct DateData {
@@ -16,22 +16,20 @@ pub struct DateData {
 }
 
 impl DateData {
-    pub fn parse(date_str:&str)->Result<DateData, ParsingError>{
+    pub fn parse(date_str: &str) -> Result<DateData, ParsingError> {
         let x: Vec<&str> = date_str.split('-').collect();
         match (x.get(0), x.get(1), x.get(2)) {
-            (Some(year_str), Some(month_str), Some(day_str)) => {
-                Result::Ok(DateData {
-                    year: year_str.parse::<u16>().map_err(|_| ParsingError {
-                        message: "error parsing year",
-                    })?,
-                    month: month_str.parse::<u8>().map_err(|_| ParsingError {
-                        message : "error parsing month",
-                    })?,
-                    day: day_str.parse::<u8>().map_err(|_| ParsingError {
-                        message: "error parsing day",
-                    })?,
-                })
-            }
+            (Some(year_str), Some(month_str), Some(day_str)) => Result::Ok(DateData {
+                year: year_str.parse::<u16>().map_err(|_| ParsingError {
+                    message: "error parsing year",
+                })?,
+                month: month_str.parse::<u8>().map_err(|_| ParsingError {
+                    message: "error parsing month",
+                })?,
+                day: day_str.parse::<u8>().map_err(|_| ParsingError {
+                    message: "error parsing day",
+                })?,
+            }),
             _ => Result::Err(ParsingError {
                 message: "error parsing date",
             }),
@@ -56,13 +54,15 @@ pub enum RecurrenceTimeUnit {
 
 impl fmt::Display for RecurrenceTimeUnit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", 
+        write!(
+            f,
+            "{}",
             match self {
                 RecurrenceTimeUnit::B => 'b',
                 RecurrenceTimeUnit::D => 'd',
                 RecurrenceTimeUnit::M => 'm',
                 RecurrenceTimeUnit::W => 'w',
-                RecurrenceTimeUnit::Y => 'y'
+                RecurrenceTimeUnit::Y => 'y',
             }
         )
     }
@@ -71,12 +71,12 @@ impl fmt::Display for RecurrenceTimeUnit {
 #[derive(Debug, PartialEq)]
 pub enum Status {
     Done(Option<DateData>),
-    Open
+    Open,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Uuid {
-    uuid:u128
+    uuid: u128,
 }
 
 #[derive(Debug, PartialEq)]
@@ -102,11 +102,13 @@ impl fmt::Display for TodoElement {
             TodoElement::Project(project) => write!(f, "+{}", project),
             TodoElement::Recurrence { plus, count, unit } => {
                 let mut repr = String::new();
-                if *plus { repr.push('+') }
+                if *plus {
+                    repr.push('+')
+                }
                 repr.push_str(&format!("{}", count));
                 repr.push_str(&format!("{}", unit));
                 write!(f, "rec:{}", repr)
-            },
+            }
             TodoElement::Text(text) => write!(f, "{}", text),
             TodoElement::Threshold(date_data) => write!(f, "t:{}", date_data),
             TodoElement::Uuid(_) => panic!("not implemented"),
@@ -183,7 +185,7 @@ impl TodoElement {
     }
 
     fn try_parse_due(input: &str) -> Result<TodoElement, ParsingError> {
-        TodoElement::create_date_parser("due:", &TodoElement::Due)(input)   
+        TodoElement::create_date_parser("due:", &TodoElement::Due)(input)
     }
     fn try_parse_threshold(input: &str) -> Result<TodoElement, ParsingError> {
         TodoElement::create_date_parser("t:", &TodoElement::Threshold)(input)
@@ -259,12 +261,12 @@ impl TodoEntry {
         parts.push(element);
     }
 
-    fn try_parse_status(_data: &str) -> (Status, usize){
+    fn try_parse_status(_data: &str) -> (Status, usize) {
         (Status::Open, 13)
     }
 
     pub fn parse(data: &str) -> Result<TodoEntry, ParsingError> {
-        let mut parts:Vec<TodoElement> = Vec::new();
+        let mut parts: Vec<TodoElement> = Vec::new();
         let mut split_parts: Vec<&str> = data.split_whitespace().collect();
         let status = if split_parts[0].starts_with("x") {
             Status::Done(DateData::parse(split_parts[1]).ok())
@@ -281,17 +283,29 @@ impl TodoEntry {
         for split in split_parts.iter() {
             TodoEntry::push(&mut parts, TodoElement::parse(split));
         }
-        Result::Ok(TodoEntry { status, created_date, parts })
+        Result::Ok(TodoEntry {
+            status,
+            created_date,
+            parts,
+        })
     }
 }
 
 impl fmt::Display for TodoEntry {
-    fn fmt(self: &TodoEntry, f:&mut fmt::Formatter<'_>)-> fmt::Result {
-        write!(f, "{}", self.parts.iter().map(|p|{ format!("{}", p) }).collect::<Vec<String>>().join(" "))
+    fn fmt(self: &TodoEntry, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.parts
+                .iter()
+                .map(|p| { format!("{}", p) })
+                .collect::<Vec<String>>()
+                .join(" ")
+        )
     }
 }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 struct TodoData {
     entries: Vec<TodoEntry>,
 }
@@ -310,39 +324,37 @@ impl TodoData {
     }
 }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 struct Model {
     todo_data: TodoData,
     done_data: TodoData,
 }
 
 impl Model {
-    pub fn execute(self: &mut Model, command:crate::config::Command) -> Result<(), &str>{
+    pub fn execute(self: &mut Model, command: crate::config::Command) -> Result<(), &str> {
         match command {
-            Command::Archive(offset) => {
-                self.done_data.entries.push(self.todo_data.entries.remove(offset.into()));
-                Result::Ok(())
-            },
-            Command::Add(text) => {
-                TodoEntry::parse(&text).and_then(|e| {
-                    Result::Ok(self.todo_data.entries.push(e))
-                }).map_err(|e| {
-                    e.message
-                })
-            },
-            Command::Do(index) => {
+            Command::Archive(offset) => Result::Ok({
+                self.done_data
+                    .entries
+                    .push(self.todo_data.entries.remove(offset.into()))
+            }),
+            Command::Add(text) => TodoEntry::parse(&text)
+                .and_then(|e| Result::Ok(self.todo_data.entries.push(e)))
+                .map_err(|e| e.message),
+            Command::Do(index) => Result::Ok({
                 let date = Local::now().date();
                 let year = date.year() as u16;
                 let month = date.month() as u8;
                 let day = date.day() as u8;
-                self.todo_data.entries[index as usize].status = Status::Done(Option::Some(DateData{year, month, day}));
-                Result::Ok(())
-            },
-            Command::Undo(index) => {
-                self.todo_data.entries[index as usize].status = Status::Open;
-                Result::Ok(())
-            },
-            _ => Result::Err("Operation not implemented")
+                self.todo_data.entries[index as usize].status =
+                    Status::Done(Option::Some(DateData { year, month, day }))
+            }),
+            Command::Undo(index) => Result::Ok( self.todo_data.entries[index as usize].status = Status::Open ),
+            Command::List => Result::Ok(
+                for (i, entry) in self.todo_data.entries.iter().enumerate() {
+                    println!("[{}] {}", i, entry)
+                },
+            ),
         }
     }
 }
