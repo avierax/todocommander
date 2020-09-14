@@ -321,6 +321,13 @@ impl Model {
                 self.done_data.entries.push(self.todo_data.entries.remove(offset.into()));
                 Result::Ok(())
             },
+            Command::Add(text) => {
+                TodoEntry::parse(&text).and_then(|e| {
+                    Result::Ok(self.todo_data.entries.push(e))
+                }).map_err(|e| {
+                    e.message
+                })
+            },
             _ => Result::Err("Operation not implemented")
         }
     }
