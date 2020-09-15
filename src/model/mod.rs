@@ -306,7 +306,7 @@ impl fmt::Display for TodoEntry {
 }
 
 #[derive(Debug, PartialEq)]
-struct TodoData {
+pub struct TodoData {
     entries: Vec<TodoEntry>,
 }
 
@@ -325,9 +325,9 @@ impl TodoData {
 }
 
 #[derive(Debug, PartialEq)]
-struct Model {
-    todo_data: TodoData,
-    done_data: TodoData,
+pub struct Model {
+    pub todo_data: TodoData,
+    pub done_data: TodoData,
 }
 
 impl Model {
