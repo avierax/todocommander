@@ -11,3 +11,4 @@ homepage = "https://github.com/avierax/todocommander"
 
 [dependencies]
 chrono = "0.4.15"
+directories = "3.0.1"
