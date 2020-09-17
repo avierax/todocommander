@@ -34,8 +34,8 @@ fn run_app(todo_filename: String, done_filename: String, command:config::Command
     model.execute(command).map_err(|e| Error{message: e.to_owned() })
 }
 
-fn read_configuration() -> config::ArgsConfig {
-    config::ArgsConfig {
+fn read_configuration() -> config::Config {
+    config::Config {
         todo_filename: Option::None,
         done_filename: Option::None,
     }

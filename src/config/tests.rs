@@ -54,7 +54,7 @@ pub fn parse_arguments_1() {
     assert!(matches!(
         parse_arguments(iter),
         Result::Ok(Arguments {
-            config: Config {
+            config: ArgsConfig {
                 todo_filename: Option::Some(b),
                 done_filename: Option::Some(a),
             },
@@ -71,7 +71,7 @@ pub fn parse_arguments_2() {
     assert!(matches!(
         parse_arguments(iter),
         Result::Ok(Arguments {
-            config: Config {
+            config: ArgsConfig {
                 todo_filename: Option::Some(b),
                 done_filename: Option::Some(a),
             },

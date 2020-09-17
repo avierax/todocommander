@@ -1,7 +1,12 @@
 mod tests;
 
-#[derive(Debug)]
 pub struct Config {
+    pub todo_filename: Option<String>,
+    pub done_filename: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct ArgsConfig {
     pub todo_filename: Option<String>,
     pub done_filename: Option<String>,
 }
@@ -18,16 +23,16 @@ pub enum Command {
 
 #[derive(Debug)]
 pub struct Arguments {
-    pub config: Config,
+    pub config: ArgsConfig,
     pub command: Command,
 }
 
-impl Config {
-    pub fn set_todo_filename(self: &mut Config, value: String) {
+impl ArgsConfig {
+    pub fn set_todo_filename(self: &mut ArgsConfig, value: String) {
         self.todo_filename = Option::Some(value);
     }
 
-    pub fn set_done_filename(self: &mut Config, value: String) {
+    pub fn set_done_filename(self: &mut ArgsConfig, value: String) {
         self.done_filename = Option::Some(value);
     }
 }
@@ -42,7 +47,7 @@ pub struct ArgumentDef {
 
 struct ArgumentDefAccessor {
     argument_def: ArgumentDef,
-    accessor: &'static dyn Fn(&mut Config, String) -> (),
+    accessor: &'static dyn Fn(&mut ArgsConfig, String) -> (),
 }
 
 fn find_arg_def<'a>(
@@ -66,7 +71,7 @@ const ARGUMENT_DEFS_ACCESSORS: &'static [ArgumentDefAccessor] = &[
             help_message: "todo file",
             mandatory: true,
         },
-        accessor: &Config::set_todo_filename,
+        accessor: &ArgsConfig::set_todo_filename,
     },
     ArgumentDefAccessor {
         argument_def: ArgumentDef {
@@ -75,7 +80,7 @@ const ARGUMENT_DEFS_ACCESSORS: &'static [ArgumentDefAccessor] = &[
             help_message: "done file",
             mandatory: true,
         },
-        accessor: &Config::set_done_filename,
+        accessor: &ArgsConfig::set_done_filename,
     },
 ];
 
@@ -86,8 +91,8 @@ pub enum ErrorType {
 
 pub fn parse_config(
     args: &mut dyn Iterator<Item = String>,
-) -> Result<(Config, /*unprocessed args*/ Vec<String>), ErrorType> {
-    let mut config = Config {
+) -> Result<(ArgsConfig, /*unprocessed args*/ Vec<String>), ErrorType> {
+    let mut config = ArgsConfig {
         todo_filename: Option::None,
         done_filename: Option::None,
     };
