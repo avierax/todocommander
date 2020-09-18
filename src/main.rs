@@ -1,5 +1,6 @@
 mod config;
 mod model;
+mod tests;
 
 use config::ErrorType;
 use model::*;
@@ -28,6 +29,7 @@ impl std::convert::From<&str> for Error {
     }
 }
 
+#[derive(Debug)]
 struct Config {
     todo_filename: Option<String>,
     done_filename: Option<String>,
@@ -49,6 +51,21 @@ fn run_app(
     })
 }
 
+fn read_configuration_from_filecontent(file_content: &str, result: &mut Config){
+    file_content.lines().for_each(|l| {
+        let line: &str = l;
+        let split: Vec<&str> = line.split('=').collect();
+        if split.len()==2 {
+            if split[0] == "todo_filename" {
+                result.todo_filename = Option::Some(split[1].to_owned());
+            }
+            if split[1] == "done_filename" {
+                result.done_filename = Option::Some(split[1].to_owned());
+            }
+        }
+    })
+}
+
 fn read_configuration() -> Config {
     let mut result = Config {
         todo_filename: Option::None,
@@ -60,16 +77,7 @@ fn read_configuration() -> Config {
         if let Result::Ok(mut f) = std::fs::File::open(path) {
             let mut file_content = String::new();
             let _result = f.read_to_string(&mut file_content);
-            file_content.lines().for_each(|l| {
-                let line: &str = l;
-                let split: Vec<&str> = line.split('=').collect();
-                if split[0] == "todo_filename" {
-                    result.todo_filename = Option::Some(split[1].to_owned());
-                }
-                if split[1] == "done_filename" {
-                    result.done_filename = Option::Some(split[1].to_owned());
-                }
-            })
+            read_configuration_from_filecontent(&file_content, &mut result);
         }
     }
     result
