@@ -1,6 +1,6 @@
 [package]
 name = "todocommander"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Ariel Viera <ariel.viera@gmail.com>"]
 edition = "2018"
 description = "Command line utility to manipulate todo.txt files"
