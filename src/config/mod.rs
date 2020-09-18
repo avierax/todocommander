@@ -1,10 +1,5 @@
 mod tests;
 
-pub struct Config {
-    pub todo_filename: Option<String>,
-    pub done_filename: Option<String>,
-}
-
 #[derive(Debug)]
 pub struct ArgsConfig {
     pub todo_filename: Option<String>,
