@@ -151,7 +151,7 @@ pub fn parse_command(command: &Vec<String>) -> Result<Command, ErrorType> {
 }
 
 pub fn parse_arguments(args: &mut dyn Iterator<Item = String>) -> Result<Arguments, ErrorType> {
-    parse_config(args).and_then(|config_and_rest| {
+    parse_config(&mut args.skip(1)).and_then(|config_and_rest| {
         parse_command(&config_and_rest.1).map(|command| Arguments {
             config: config_and_rest.0,
             command,

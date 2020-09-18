@@ -268,17 +268,19 @@ impl TodoEntry {
     pub fn parse(data: &str) -> Result<TodoEntry, ParsingError> {
         let mut parts: Vec<TodoElement> = Vec::new();
         let mut split_parts: Vec<&str> = data.split_whitespace().collect();
-        let status = if split_parts[0].starts_with("x") {
-            Status::Done(DateData::parse(split_parts[1]).ok())
-        } else {
-            Status::Open
-        };
-        if let Status::Done(Option::Some(_)) = status {
-            split_parts = split_parts[2..].into(); // skip two
-        }
-        let created_date = DateData::parse(split_parts[0]).ok();
-        if let Option::Some(_) = created_date {
-            split_parts = split_parts[1..].into();
+        let mut created_date = Option::None;
+        let mut status = Status::Open;
+        if !split_parts.is_empty() {
+            if split_parts[0].starts_with("x") {
+                status = Status::Done(DateData::parse(split_parts[1]).ok())
+            }   
+            if let Status::Done(Option::Some(_)) = status {
+                split_parts = split_parts[2..].into(); // skip two
+            }
+            created_date = DateData::parse(split_parts[0]).ok();
+            if let Option::Some(_) = created_date {
+                split_parts = split_parts[1..].into();
+            }
         }
         for split in split_parts.iter() {
             TodoEntry::push(&mut parts, TodoElement::parse(split));
