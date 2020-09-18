@@ -2,7 +2,7 @@ mod config;
 mod model;
 mod tests;
 
-use config::ErrorType;
+use config::*;
 use model::*;
 use std::env;
 use std::io::prelude::*;
@@ -29,16 +29,10 @@ impl std::convert::From<&str> for Error {
     }
 }
 
-#[derive(Debug)]
-struct Config {
-    todo_filename: Option<String>,
-    done_filename: Option<String>,
-}
-
 fn run_app(
     todo_filename: String,
     done_filename: String,
-    command: config::Command,
+    command:Command,
 ) -> Result<(), Error> {
     let todo_str = std::fs::read_to_string(todo_filename)?;
     let done_str = std::fs::read_to_string(done_filename)?;
@@ -48,21 +42,6 @@ fn run_app(
     };
     model.execute(command).map_err(|e| Error {
         message: e.to_owned(),
-    })
-}
-
-fn read_configuration_from_filecontent(file_content: &str, result: &mut Config){
-    file_content.lines().for_each(|l| {
-        let line: &str = l;
-        let split: Vec<&str> = line.split('=').collect();
-        if split.len()==2 {
-            if split[0] == "todo_filename" {
-                result.todo_filename = Option::Some(split[1].to_owned());
-            }
-            if split[0] == "done_filename" {
-                result.done_filename = Option::Some(split[1].to_owned());
-            }
-        }
     })
 }
 
@@ -89,7 +68,7 @@ fn main() -> Result<(), Error> {
     println!("{}", VERSION);
     let config = read_configuration();
     println!("{:?}", &config);
-    match config::parse_arguments(&mut env::args()) {
+    match parse_arguments(&mut env::args()) {
         Result::Err(ErrorType::MissingArguments(unset_arguments)) => {
             for unset_argument in unset_arguments {
                 eprintln!("error unset argument {}", unset_argument.long_form);

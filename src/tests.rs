@@ -1,7 +1,7 @@
 #[test]
 pub fn test_parse_config() {
     use crate::*;
-    let mut config = crate::Config {
+    let mut config = crate::config::Config {
         todo_filename: Option::None,
         done_filename: Option::None,
     };
