@@ -59,7 +59,7 @@ fn read_configuration_from_filecontent(file_content: &str, result: &mut Config){
             if split[0] == "todo_filename" {
                 result.todo_filename = Option::Some(split[1].to_owned());
             }
-            if split[1] == "done_filename" {
+            if split[0] == "done_filename" {
                 result.done_filename = Option::Some(split[1].to_owned());
             }
         }
@@ -74,6 +74,7 @@ fn read_configuration() -> Config {
     if let Option::Some(dirs) = directories::ProjectDirs::from("", "", "todocommander") {
         let mut path = dirs.config_dir().to_path_buf();
         path.push("todocommander.cfg");
+        println!("{:?}", path);
         if let Result::Ok(mut f) = std::fs::File::open(path) {
             let mut file_content = String::new();
             let _result = f.read_to_string(&mut file_content);
@@ -84,7 +85,10 @@ fn read_configuration() -> Config {
 }
 
 fn main() -> Result<(), Error> {
+    const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+    println!("{}", VERSION);
     let config = read_configuration();
+    println!("{:?}", &config);
     match config::parse_arguments(&mut env::args()) {
         Result::Err(ErrorType::MissingArguments(unset_arguments)) => {
             for unset_argument in unset_arguments {
