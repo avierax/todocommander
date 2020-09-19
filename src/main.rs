@@ -12,39 +12,45 @@ struct Error {
     message: String,
 }
 
-impl std::convert::From<std::io::Error> for Error {
-    fn from(error: std::io::Error) -> Self {
-        return Error {
-            message: format!("{}", error),
-        };
-    }
-}
-
-impl std::convert::From<&str> for Error {
-    fn from(error: &str) -> Self {
-        return Error {
-            message: format!("{}", error),
-        };
-    }
-}
-
-impl std::convert::From<config::params::ErrorType> for Error {
-    fn from(error: config::params::ErrorType) -> Self {
-        match error {
-            ErrorType::MissingArguments(unset_arguments) => {
-                for unset_argument in unset_arguments {
-                    eprintln!("error unset argument {}", unset_argument.long_form);
-                }
-                Error {
-                    message: "missing arguments".into(),
-                }
-            }
-            ErrorType::CannotIdentifyCommand(_) => Error {
-                message: "error cannot identify command".into(),
-            },
+mod error_conversion { 
+    use super::Error;
+    use super::config;
+    use super::config::params::ErrorType;
+    
+    impl std::convert::From<std::io::Error> for Error {
+        fn from(error: std::io::Error) -> Self {
+            return Error {
+                message: format!("{}", error),
+            };
         }
     }
-}
+
+    impl std::convert::From<&str> for Error {
+        fn from(error: &str) -> Self {
+            return Error {
+                message: format!("{}", error),
+            };
+        }
+    }
+
+    impl std::convert::From<config::params::ErrorType> for Error {
+        fn from(error: config::params::ErrorType) -> Self {
+            match error {
+                ErrorType::MissingArguments(unset_arguments) => {
+                    for unset_argument in unset_arguments {
+                        eprintln!("error unset argument {}", unset_argument.long_form);
+                    }
+                    Error {
+                        message: "missing arguments".into(),
+                    }
+                }
+                ErrorType::CannotIdentifyCommand(_) => Error {
+                    message: "error cannot identify command".into(),
+                },
+            }
+        }
+    }
+ }
 
 fn run_app(config: Config, command: Command) -> Result<(), Error> {
     let todo_str = std::fs::read_to_string(config.todo_filename.expect(
