@@ -6,7 +6,6 @@ use config::*;
 use model::*;
 use std::env;
 use std::io::prelude::*;
-use std::process::exit;
 
 #[derive(Debug)]
 struct Error {
@@ -75,6 +74,7 @@ fn read_configuration(mut config: &mut Config) {
         }
     }
 }
+
 fn main() -> Result<(), Error> {
     const VERSION: &'static str = env!("CARGO_PKG_VERSION");
     println!("{}", VERSION);
