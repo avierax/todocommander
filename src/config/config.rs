@@ -4,6 +4,15 @@ pub struct Config {
     pub done_filename: Option<String>,
 }
 
+impl Config {
+    pub fn new()->Config{
+        Config {
+            todo_filename: Option::None,
+            done_filename: Option::None,
+        }
+    }
+}
+
 pub fn read_configuration_from_filecontent(file_content: &str, result: &mut Config){
     file_content.lines().for_each(|l| {
         let line: &str = l;
