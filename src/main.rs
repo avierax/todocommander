@@ -82,6 +82,9 @@ fn main() -> Result<(), Error> {
     read_configuration(&mut config);
     println!("{:?}", &config);
     let arguments = parse_arguments(&mut env::args())?;
-    config.todo_filename = arguments.config.todo_filename.or(config.todo_filename);
+    config = Config {
+        todo_filename: arguments.config.todo_filename.or(config.todo_filename),
+        done_filename: arguments.config.done_filename.or(config.done_filename),
+    };
     run_app(config, arguments.command)
 }
