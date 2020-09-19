@@ -3,10 +3,10 @@ extern crate chrono;
 
 pub mod tests;
 
-use crate::config::params::*;
 use chrono::prelude::*;
 use common::*;
 use std::fmt;
+use crate::args::Command;
 
 #[derive(Debug, PartialEq)]
 pub struct DateData {
@@ -333,7 +333,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn execute(self: &mut Model, command: Command) -> Result<(), &str> {
+    pub fn execute(self: &mut Model, command: crate::args::Command) -> Result<(), &str> {
         match command {
             Command::Archive(offset) => Result::Ok({
                 self.done_data

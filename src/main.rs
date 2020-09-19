@@ -1,11 +1,14 @@
 mod config;
 mod model;
 mod tests;
+mod args;
 
 use config::*;
 use model::*;
 use std::env;
 use std::io::prelude::*;
+use args::Command;
+use args::parse_arguments;
 
 #[derive(Debug)]
 struct Error {
@@ -14,9 +17,8 @@ struct Error {
 
 mod error_conversion { 
     use super::Error;
-    use super::config;
-    use super::config::params::ErrorType;
-    
+    use crate::args::ErrorType; 
+
     impl std::convert::From<std::io::Error> for Error {
         fn from(error: std::io::Error) -> Self {
             return Error {
@@ -33,8 +35,8 @@ mod error_conversion {
         }
     }
 
-    impl std::convert::From<config::params::ErrorType> for Error {
-        fn from(error: config::params::ErrorType) -> Self {
+    impl std::convert::From<ErrorType> for Error {
+        fn from(error: ErrorType) -> Self {
             match error {
                 ErrorType::MissingArguments(unset_arguments) => {
                     for unset_argument in unset_arguments {
