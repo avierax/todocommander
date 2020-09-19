@@ -3,33 +3,16 @@ mod model;
 mod tests;
 mod args;
 mod error_conversion;
+mod app;
 
 use config::*;
-use model::*;
 use std::env;
 use std::io::prelude::*;
-use args::Command;
 use args::parse_arguments;
 
 #[derive(Debug)]
-struct Error {
+pub struct Error {
     message: String,
-}
-
-fn run_app(config: Config, command: Command) -> Result<(), Error> {
-    let todo_str = std::fs::read_to_string(config.todo_filename.expect(
-        "todo filename is not present in config file and --todo-file parameter is missing",
-    ))?;
-    let done_str = std::fs::read_to_string(config.done_filename.expect(
-        "done filename is not present in config file and --done-file parameter is missing",
-    ))?;
-    let mut model = Model {
-        todo_data: TodoData::parse(&todo_str).expect("error parsing todo file"),
-        done_data: TodoData::parse(&done_str).expect("error parsing done file"),
-    };
-    model.execute(command).map_err(|e| Error {
-        message: e.to_owned(),
-    })
 }
 
 fn read_configuration(mut config: &mut Config) {
@@ -56,5 +39,6 @@ fn main() -> Result<(), Error> {
         todo_filename: arguments.config.todo_filename.or(config.todo_filename),
         done_filename: arguments.config.done_filename.or(config.done_filename),
     };
-    run_app(config, arguments.command)
+    let mut app = app::App::new(config)?;
+    app.execute(arguments.command)
 }
