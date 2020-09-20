@@ -24,10 +24,6 @@ impl TodoEntry {
         parts.push(element);
     }
 
-    fn try_parse_status(_data: &str) -> (Status, usize) {
-        (Status::Open, 13)
-    }
-
     pub fn parse(data: &str) -> Result<TodoEntry, ParsingError> {
         let mut parts: Vec<TodoElement> = Vec::new();
         let mut split_parts: Vec<&str> = data.split_whitespace().collect();

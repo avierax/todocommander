@@ -1,3 +1,5 @@
+extern crate chrono;
+
 mod config;
 mod model;
 mod tests;

@@ -1,7 +1,4 @@
-#![allow(dead_code)]
-extern crate chrono;
-
-pub mod tests;
+mod tests;
 mod todoentry;
 
 use chrono::prelude::*;
