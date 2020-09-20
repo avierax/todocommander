@@ -40,7 +40,10 @@ impl App {
     }
 
     pub fn save_model(&mut self) -> Result<(), Error> {
-        let todo_data_str = String::from("asf");
+        let mut todo_data_str = String::new();
+        for entry in &self.model.todo_data.entries {
+            todo_data_str.push_str(&format!("{}\n", entry));
+        }
         let o = &self.config.todo_filename.as_ref();
         let p : String = o.unwrap().clone();
         std::fs::write(p, todo_data_str)?;

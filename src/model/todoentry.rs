@@ -60,7 +60,7 @@ impl fmt::Display for TodoEntry {
     fn fmt(self: &TodoEntry, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}",
+            "{}{}",
             self.status, 
             self.parts
                 .iter()
