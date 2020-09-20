@@ -40,5 +40,8 @@ fn main() -> Result<(), Error> {
         done_filename: arguments.config.done_filename.or(config.done_filename),
     };
     let mut app = app::App::new(config)?;
-    app.execute(arguments.command)
+    app.execute(arguments.command)?;
+    app.execute(args::Command::List)?;
+    Result::Ok(()) 
+
 }

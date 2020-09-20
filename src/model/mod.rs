@@ -74,6 +74,16 @@ pub enum Status {
     Open,
 }
 
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> { 
+        match self {
+            Status::Done(Option::None) => { write!(f, "x") },
+            Status::Done(Option::Some(date)) => { write!(f, "x {}", date) },
+            _ => { write!(f, "") }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Uuid {
     uuid: u128,
@@ -297,7 +307,8 @@ impl fmt::Display for TodoEntry {
     fn fmt(self: &TodoEntry, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}",
+            "{} {}",
+            self.status, 
             self.parts
                 .iter()
                 .map(|p| { format!("{}", p) })

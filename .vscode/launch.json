@@ -7,6 +7,24 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "debug do",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=todocommander",
+                    "--package=todocommander"
+                ],
+                "filter": {
+                    "name": "todocommander",
+                    "kind": "bin"
+                }
+            },
+            "args": ["do", "57"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'todocommander'",
             "cargo": {
                 "args": [
