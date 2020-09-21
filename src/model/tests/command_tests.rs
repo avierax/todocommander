@@ -4,6 +4,7 @@
 
 use crate::model::*;
 
+#[allow(dead_code)]
 fn create_model_for_testing() -> Model {
     Model {
         todo_data: TodoData::parse(
