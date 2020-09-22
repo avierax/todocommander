@@ -43,6 +43,5 @@ fn main() -> Result<(), Error> {
     };
     let mut app = app::App::new(config)?;
     app.execute(arguments.command)?;
-    app.execute(args::Command::List)?;
     app.save_model()
 }
