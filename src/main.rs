@@ -42,6 +42,26 @@ fn main() -> Result<(), Error> {
         done_filename: arguments.config.done_filename.or(config.done_filename),
     };
     let mut app = app::App::new(config)?;
-    app.execute(arguments.command)?;
-    app.save_model()
+    if arguments.config.help == true {
+        Result::Ok(println!("
+TodoCommander
+
+USAGE:
+        todocommander [OPTIONS] [SUBCOMMAND]
+
+OPTIONS:
+    -f, --todo-file         Todo filename
+    -d, --done-file         Done filename
+    --help                  This help message
+
+Commands
+    list
+    do
+        "))
+    } else if arguments.command.is_some() {
+        app.execute(arguments.command.unwrap())?;
+        app.save_model()
+    } else {
+        Result::Err(Error{message:"Nothing to do".into()})
+    }
 }

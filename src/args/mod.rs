@@ -2,6 +2,7 @@
 pub struct ArgsConfig {
     pub todo_filename: Option<String>,
     pub done_filename: Option<String>,
+    pub help: bool,
 }
 
 #[derive(Debug)]
@@ -17,7 +18,7 @@ pub enum Command {
 #[derive(Debug)]
 pub struct Arguments {
     pub config: ArgsConfig,
-    pub command: Command,
+    pub command: Option<Command>,
 }
 
 impl ArgsConfig {
@@ -28,51 +29,68 @@ impl ArgsConfig {
     pub fn set_done_filename(self: &mut ArgsConfig, value: String) {
         self.done_filename = Option::Some(value);
     }
+
+    pub fn toggle_help(self: &mut ArgsConfig){
+        self.help = true;
+    }
+}
+
+pub enum ArgumentType {
+    Parameterized(ArgumentDef),
+    Flag(FlagDef),
 }
 
 pub struct ArgumentDef {
     pub long_form: &'static str,
     pub short_form: Option<&'static str>,
     pub help_message: &'static str,
-    pub mandatory: bool,
     accessor: &'static dyn Fn(&mut ArgsConfig, String) -> (),
+}
+
+pub struct FlagDef {
+    pub long_form: &'static str,
+    pub short_form: Option<&'static str>,
+    pub help_message: &'static str,
+    accessor: &'static dyn Fn(&mut ArgsConfig) -> ()
 }
 
 fn find_arg_def<'a>(
     arg: &str,
-    argument_defs_accessors: &'a [ArgumentDef],
-) -> Option<(usize, &'a ArgumentDef)> {
-    for (i, arg_def) in argument_defs_accessors.iter().enumerate() {
-        if arg_def.long_form == arg || arg_def.short_form.unwrap() == arg
-        {
-            return Option::Some((i, arg_def));
+    argument_defs_accessors: &'a [ArgumentType],
+) -> Option<&'a ArgumentType>{
+    for arg_type in argument_defs_accessors.iter() {
+        // Reduce ciclomatic complexity
+        match arg_type { 
+            ArgumentType::Parameterized(arg_def) => if arg_def.long_form == arg || ( arg_def.short_form.is_some() && arg_def.short_form.unwrap() == arg ) {
+                return Option::Some(arg_type);
+            },
+            ArgumentType::Flag(flag_def) => if flag_def.long_form == arg || ( flag_def.short_form.is_some() && flag_def.short_form.unwrap() == arg ) {
+                return Option::Some(arg_type);
+            }
         }
     }
     Option::None
 }
 
-const ARGUMENT_DEFS: &'static [ArgumentDef] = &[
-    ArgumentDef {
+const ARGUMENT_DEFS: &'static [ArgumentType] = &[
+    ArgumentType::Flag(FlagDef {
         long_form: "--help",
         short_form: Option::None,
         help_message: "help",
-        mandatory: false,
-        accessor: &ArgsConfig::set_todo_filename,
-    },
-    ArgumentDef {
+        accessor: &ArgsConfig::toggle_help,
+    }),
+    ArgumentType::Parameterized(ArgumentDef {
         long_form: "--todo-file",
         short_form: Option::Some("-f"),
         help_message: "todo file",
-        mandatory: false,
         accessor: &ArgsConfig::set_todo_filename,
-    },
-    ArgumentDef {
+    }),
+    ArgumentType::Parameterized(ArgumentDef {
         long_form: "--done-file",
         short_form: Option::Some("-d"),
         help_message: "done file",
-        mandatory: false,
         accessor: &ArgsConfig::set_done_filename,
-    },
+    }),
 ];
 
 pub enum ErrorType {
@@ -86,21 +104,20 @@ pub fn parse_config(
     let mut config = ArgsConfig {
         todo_filename: Option::None,
         done_filename: Option::None,
+        help: false,
     };
-    let mut must_include_args: Vec<bool> = Vec::new();
-    for arg_def in ARGUMENT_DEFS.iter() {
-        must_include_args.push(arg_def.mandatory);
-    }
 
     let mut unprocessed_args: Vec<String> = Vec::new();
     while let Option::Some(arg) = args.next() {
-        if let Option::Some((i, arg_def)) = find_arg_def(&arg, &ARGUMENT_DEFS) {
+        if let Option::Some(arg_type) = find_arg_def(&arg, &ARGUMENT_DEFS) {
             let argument = args.next();
-            (arg_def.accessor)(
-                &mut config,
-                argument.expect(&format!("argument {} not present", &arg)),
-            );
-            must_include_args[i] = false;
+            match arg_type {
+                ArgumentType::Parameterized(arg_def) => (arg_def.accessor)(
+                    &mut config,
+                    argument.expect(&format!("argument {} not present", &arg)),
+                ),
+                ArgumentType::Flag(flag_def) => (flag_def.accessor)(&mut config)
+            }
         } else {
             unprocessed_args.push(arg);
             while let Option::Some(arg) = args.next() {
@@ -109,39 +126,30 @@ pub fn parse_config(
             break;
         }
     }
-
-    let mut unset_arguments: Vec<&ArgumentDef> = Vec::new();
-
-    for (i, arg_def) in ARGUMENT_DEFS.iter().enumerate() {
-        if must_include_args[i] {
-            unset_arguments.push(&arg_def);
-        }
-    }
-
-    if !unset_arguments.is_empty() {
-        Result::Err(ErrorType::MissingArguments(unset_arguments))
-    } else {
-        Result::Ok((config, unprocessed_args))
-    }
+    Result::Ok((config, unprocessed_args))
 }
 
-pub fn parse_command(command: &Vec<String>) -> Result<Command, ErrorType> {
-    match command[0].as_str() {
-        "add" => Result::Ok(Command::Add(command[1..].join(" "))),
-        "archive" => {
-            let id = command[1].parse::<u16>().expect("error parsing task id");
-            Result::Ok(Command::Archive(id))
+pub fn parse_command(command: &Vec<String>) -> Result<Option<Command>, ErrorType> {
+    if command.len() > 0 {
+        match command[0].as_str() {
+            "add" => Result::Ok(Option::Some(Command::Add(command[1..].join(" ")))),
+            "archive" => {
+                let id = command[1].parse::<u16>().expect("error parsing task id");
+                Result::Ok(Option::Some(Command::Archive(id)))
+            }
+            "do" => {
+                let id = command[1].parse::<u16>().expect("error parsing task id");
+                Result::Ok(Option::Some(Command::Do(id)))
+            },
+            "list" => Result::Ok(Option::Some(Command::List)),
+            "undo" => {
+                let id = command[1].parse::<u16>().expect("error parsing task id");
+                Result::Ok(Option::Some(Command::Undo(id)))
+            },
+            _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
         }
-        "do" => {
-            let id = command[1].parse::<u16>().expect("error parsing task id");
-            Result::Ok(Command::Do(id))
-        },
-        "list" => Result::Ok(Command::List),
-        "undo" => {
-            let id = command[1].parse::<u16>().expect("error parsing task id");
-            Result::Ok(Command::Undo(id))
-        },
-        _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
+    } else {
+        Result::Ok(Option::None)
     }
 }
 
