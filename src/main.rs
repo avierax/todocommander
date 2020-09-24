@@ -56,7 +56,8 @@ OPTIONS:
 
 Commands
     list
-    do
+    do NUMBER
+    add TEXT 
         "))
     } else if arguments.command.is_some() {
         app.execute(arguments.command.unwrap())?;
