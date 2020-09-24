@@ -25,14 +25,14 @@ pub struct Model {
 impl Model {
     pub fn execute(self: &mut Model, command: crate::args::Command) -> Result<(), &str> {
         match command {
+            Command::Add(text) => TodoEntry::parse(&text)
+                .and_then(|e| Result::Ok(self.todo_data.entries.push(e)))
+                .map_err(|e| e.message),
             Command::Archive(offset) => Result::Ok({
                 self.done_data
                     .entries
                     .push(self.todo_data.entries.remove(offset.into()))
             }),
-            Command::Add(text) => TodoEntry::parse(&text)
-                .and_then(|e| Result::Ok(self.todo_data.entries.push(e)))
-                .map_err(|e| e.message),
             Command::Do(index) => Result::Ok({
                 let date = Local::now().date();
                 let year = date.year() as u16;
@@ -41,12 +41,12 @@ impl Model {
                 self.todo_data.entries[index as usize].status =
                     Status::Done(Option::Some(DateData { year, month, day }))
             }),
-            Command::Undo(index) => Result::Ok( self.todo_data.entries[index as usize].status = Status::Open ),
             Command::List => Result::Ok(
                 for (i, entry) in self.todo_data.entries.iter().enumerate() {
                     println!("[{}] {}", i, entry)
                 },
             ),
+            Command::Undo(index) => Result::Ok( self.todo_data.entries[index as usize].status = Status::Open ),
         }
     }
 }
