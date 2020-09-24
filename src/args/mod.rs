@@ -8,10 +8,11 @@ pub struct ArgsConfig {
 #[derive(Debug)]
 #[allow(dead_code)]
 pub enum Command {
-    Add (String),
-    Archive (u16),
+    Add(String),
+    Archive(u16),
     Do(u16),
     List,
+    Remove(u16),
     Undo(u16),
 }
 
@@ -30,7 +31,7 @@ impl ArgsConfig {
         self.done_filename = Option::Some(value);
     }
 
-    pub fn toggle_help(self: &mut ArgsConfig){
+    pub fn toggle_help(self: &mut ArgsConfig) {
         self.help = true;
     }
 }
@@ -51,21 +52,29 @@ pub struct FlagDef {
     pub long_form: &'static str,
     pub short_form: Option<&'static str>,
     pub help_message: &'static str,
-    accessor: &'static dyn Fn(&mut ArgsConfig) -> ()
+    accessor: &'static dyn Fn(&mut ArgsConfig) -> (),
 }
 
 fn find_arg_def<'a>(
     arg: &str,
     argument_defs_accessors: &'a [ArgumentType],
-) -> Option<&'a ArgumentType>{
+) -> Option<&'a ArgumentType> {
     for arg_type in argument_defs_accessors.iter() {
         // Reduce ciclomatic complexity
-        match arg_type { 
-            ArgumentType::Parameterized(arg_def) => if arg_def.long_form == arg || ( arg_def.short_form.is_some() && arg_def.short_form.unwrap() == arg ) {
-                return Option::Some(arg_type);
-            },
-            ArgumentType::Flag(flag_def) => if flag_def.long_form == arg || ( flag_def.short_form.is_some() && flag_def.short_form.unwrap() == arg ) {
-                return Option::Some(arg_type);
+        match arg_type {
+            ArgumentType::Parameterized(arg_def) => {
+                if arg_def.long_form == arg
+                    || (arg_def.short_form.is_some() && arg_def.short_form.unwrap() == arg)
+                {
+                    return Option::Some(arg_type);
+                }
+            }
+            ArgumentType::Flag(flag_def) => {
+                if flag_def.long_form == arg
+                    || (flag_def.short_form.is_some() && flag_def.short_form.unwrap() == arg)
+                {
+                    return Option::Some(arg_type);
+                }
             }
         }
     }
@@ -116,7 +125,7 @@ pub fn parse_config(
                     &mut config,
                     argument.expect(&format!("argument {} not present", &arg)),
                 ),
-                ArgumentType::Flag(flag_def) => (flag_def.accessor)(&mut config)
+                ArgumentType::Flag(flag_def) => (flag_def.accessor)(&mut config),
             }
         } else {
             unprocessed_args.push(arg);
@@ -140,12 +149,15 @@ pub fn parse_command(command: &Vec<String>) -> Result<Option<Command>, ErrorType
             "do" => {
                 let id = command[1].parse::<u16>().expect("error parsing task id");
                 Result::Ok(Option::Some(Command::Do(id)))
-            },
+            }
             "list" => Result::Ok(Option::Some(Command::List)),
+            "remove" => { 
+                let id = command[1].parse::<u16>().expect("error parsing task id");
+                Result::Ok(Option::Some(Command::Remove(id))) }
             "undo" => {
                 let id = command[1].parse::<u16>().expect("error parsing task id");
                 Result::Ok(Option::Some(Command::Undo(id)))
-            },
+            }
             _ => Result::Err(ErrorType::CannotIdentifyCommand(command.to_owned())),
         }
     } else {

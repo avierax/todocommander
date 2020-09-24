@@ -46,6 +46,10 @@ impl Model {
                     println!("[{}] {}", i, entry)
                 },
             ),
+            Command::Remove(index) => { 
+                self.todo_data.entries.remove(index as usize);
+                Result::Ok(())
+            },
             Command::Undo(index) => Result::Ok( self.todo_data.entries[index as usize].status = Status::Open ),
         }
     }

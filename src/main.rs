@@ -55,9 +55,10 @@ OPTIONS:
     --help                  This help message
 
 Commands
-    list
-    do NUMBER
     add TEXT 
+    do NUMBER
+    list
+    remove NUMBER
         "))
     } else if arguments.command.is_some() {
         app.execute(arguments.command.unwrap())?;
