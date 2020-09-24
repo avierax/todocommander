@@ -161,6 +161,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tcd"
+version = "0.2.1"
+dependencies = [
+ "chrono",
+ "directories",
+]
+
+[[package]]
 name = "time"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -169,14 +177,6 @@ dependencies = [
  "libc",
  "wasi 0.10.0+wasi-snapshot-preview1",
  "winapi",
-]
-
-[[package]]
-name = "todocommander"
-version = "0.2.1"
-dependencies = [
- "chrono",
- "directories",
 ]
 
 [[package]]
