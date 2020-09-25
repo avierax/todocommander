@@ -56,6 +56,7 @@ OPTIONS:
 
 Commands
     add TEXT 
+    archive [ NUMBER ]
     do NUMBER
     list
     remove NUMBER

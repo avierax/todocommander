@@ -32,7 +32,7 @@ impl TodoEntry {
         if !split_parts.is_empty() {
             if split_parts[0].starts_with("x") {
                 status = Status::Done(DateData::parse(split_parts[1]).ok())
-            }   
+            }
             if let Status::Done(Option::Some(_)) = status {
                 split_parts = split_parts[2..].into(); // skip two
             }
@@ -54,15 +54,20 @@ impl TodoEntry {
 
 impl fmt::Display for TodoEntry {
     fn fmt(self: &TodoEntry, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            self.status, 
-            self.parts
-                .iter()
-                .map(|p| { format!("{}", p) })
-                .collect::<Vec<String>>()
-                .join(" ")
-        )
+        write!(f, "{}", self.status,)
+            .and(if let Option::Some(date_data) = &self.created_date {
+                write!(f, "{} ", date_data)
+            } else {
+                Result::Ok(())
+            })
+            .and(write!(
+                f,
+                "{}",
+                self.parts
+                    .iter()
+                    .map(|p| { format!("{}", p) })
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            ))
     }
 }

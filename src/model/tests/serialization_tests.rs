@@ -114,5 +114,12 @@ pub fn serialization_roundtrip(){
     let entry = TodoEntry::parse(original).unwrap();
     let text = format!("{}", entry);
     assert_eq!(text, original);
+}
 
+#[test]
+pub fn serialization_roundtrip_2(){
+    let original = "2020-05-15 window.requestAnimationFrame +background";
+    let entry = TodoEntry::parse(original).unwrap();
+    let text = format!("{}", entry);
+    assert_eq!(text, original);
 }
